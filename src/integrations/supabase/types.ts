@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      feed_items: {
+        Row: {
+          ai_summary: string | null
+          created_at: string
+          description: string | null
+          first_seen_at: string
+          id: string
+          link: string
+          published_at: string | null
+          publisher: string | null
+          severity: string | null
+          source: string
+          title: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          created_at?: string
+          description?: string | null
+          first_seen_at?: string
+          id?: string
+          link: string
+          published_at?: string | null
+          publisher?: string | null
+          severity?: string | null
+          source: string
+          title: string
+        }
+        Update: {
+          ai_summary?: string | null
+          created_at?: string
+          description?: string | null
+          first_seen_at?: string
+          id?: string
+          link?: string
+          published_at?: string | null
+          publisher?: string | null
+          severity?: string | null
+          source?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
