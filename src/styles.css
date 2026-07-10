@@ -4,11 +4,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Kaalu — dark, glassmorphism, cyan/blue neon executive theme.
+ */
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -28,74 +35,133 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-critical: var(--critical);
-  --color-high: var(--high);
-  --color-medium: var(--medium);
-  --color-low: var(--low);
-  --color-cyan: var(--cyan);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
   --color-neon: var(--neon);
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-neon-soft: var(--neon-soft);
+  --color-glass: var(--glass);
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
-  --radius: 0.5rem;
-  /* Dark cyber command center — the only theme */
-  --background: oklch(0.16 0.02 250);
+  --radius: 0.75rem;
+  /* Deep space background */
+  --background: oklch(0.14 0.03 260);
   --foreground: oklch(0.96 0.01 240);
-  --card: oklch(0.20 0.025 250);
+  --card: oklch(0.19 0.035 260 / 0.55);
   --card-foreground: oklch(0.96 0.01 240);
-  --popover: oklch(0.20 0.025 250);
+  --popover: oklch(0.16 0.03 260);
   --popover-foreground: oklch(0.96 0.01 240);
-  --primary: oklch(0.82 0.18 195);
-  --primary-foreground: oklch(0.15 0.03 250);
-  --secondary: oklch(0.26 0.03 250);
+  /* Cyan neon primary */
+  --primary: oklch(0.82 0.15 210);
+  --primary-foreground: oklch(0.14 0.03 260);
+  --secondary: oklch(0.24 0.04 260);
   --secondary-foreground: oklch(0.96 0.01 240);
-  --muted: oklch(0.24 0.025 250);
-  --muted-foreground: oklch(0.68 0.02 240);
-  --accent: oklch(0.30 0.05 250);
+  --muted: oklch(0.22 0.03 260);
+  --muted-foreground: oklch(0.68 0.03 240);
+  --accent: oklch(0.28 0.06 240);
   --accent-foreground: oklch(0.96 0.01 240);
-  --destructive: oklch(0.65 0.24 25);
+  --destructive: oklch(0.66 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.30 0.03 250);
-  --input: oklch(0.26 0.03 250);
-  --ring: oklch(0.82 0.18 195);
-  --cyan: oklch(0.82 0.18 195);
-  --neon: oklch(0.85 0.22 145);
-  --critical: oklch(0.65 0.24 25);
-  --high: oklch(0.75 0.18 45);
-  --medium: oklch(0.82 0.16 85);
-  --low: oklch(0.80 0.14 195);
+  --border: oklch(0.98 0.01 240 / 0.08);
+  --input: oklch(0.98 0.01 240 / 0.06);
+  --ring: oklch(0.78 0.15 210);
+  --chart-1: oklch(0.78 0.15 210);
+  --chart-2: oklch(0.7 0.18 260);
+  --chart-3: oklch(0.72 0.16 180);
+  --chart-4: oklch(0.75 0.18 320);
+  --chart-5: oklch(0.68 0.19 30);
+  --sidebar: oklch(0.11 0.025 260 / 0.72);
+  --sidebar-foreground: oklch(0.9 0.02 240);
+  --sidebar-primary: oklch(0.82 0.15 210);
+  --sidebar-primary-foreground: oklch(0.14 0.03 260);
+  --sidebar-accent: oklch(0.22 0.04 260 / 0.6);
+  --sidebar-accent-foreground: oklch(0.96 0.01 240);
+  --sidebar-border: oklch(0.98 0.01 240 / 0.06);
+  --sidebar-ring: oklch(0.82 0.15 210);
+  --neon: oklch(0.85 0.18 205);
+  --neon-soft: oklch(0.7 0.14 220);
+  --glass: oklch(0.98 0.01 240 / 0.04);
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body { background-color: var(--color-background); color: var(--color-foreground); }
+  :root {
+    color-scheme: dark;
+  }
+  * {
+    border-color: var(--color-border);
+  }
   body {
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background-image:
-      radial-gradient(circle at 15% 10%, oklch(0.25 0.08 195 / 0.25), transparent 45%),
-      radial-gradient(circle at 85% 90%, oklch(0.30 0.10 280 / 0.2), transparent 50%),
-      linear-gradient(oklch(0.22 0.02 250 / 0.35) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(0.22 0.02 250 / 0.35) 1px, transparent 1px);
-    background-size: auto, auto, 32px 32px, 32px 32px;
-    background-attachment: fixed;
-    min-height: 100vh;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, oklch(0.32 0.14 260 / 0.35), transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, oklch(0.35 0.15 200 / 0.28), transparent 60%),
+      radial-gradient(700px 500px at 50% 120%, oklch(0.28 0.14 300 / 0.25), transparent 60%),
+      var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
 }
 
-@utility glow-border {
-  box-shadow: 0 0 0 1px oklch(0.82 0.18 195 / 0.25), 0 0 24px oklch(0.82 0.18 195 / 0.15);
+@utility glass {
+  background: color-mix(in oklch, white 4%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in oklch, white 8%, transparent);
 }
-@utility panel {
-  background: linear-gradient(180deg, oklch(0.22 0.03 250 / 0.85), oklch(0.18 0.025 250 / 0.85));
-  backdrop-filter: blur(10px);
-  border: 1px solid oklch(0.32 0.03 250 / 0.6);
-  border-radius: 0.75rem;
+@utility glass-strong {
+  background: color-mix(in oklch, white 7%, transparent);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid color-mix(in oklch, white 10%, transparent);
 }
-@utility chip {
-  display: inline-flex; align-items: center; gap: 0.35rem;
-  padding: 0.15rem 0.55rem; border-radius: 999px;
-  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
-  border: 1px solid oklch(0.35 0.04 250);
-  background: oklch(0.22 0.03 250 / 0.6);
+@utility neon-text {
+  color: var(--color-neon);
+  text-shadow: 0 0 12px color-mix(in oklch, var(--color-neon) 55%, transparent);
 }
+@utility neon-ring {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--color-neon) 40%, transparent),
+    0 0 24px color-mix(in oklch, var(--color-neon) 30%, transparent),
+    inset 0 0 24px color-mix(in oklch, var(--color-neon) 10%, transparent);
+}
+
+@keyframes kaalu-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+@keyframes kaalu-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+@keyframes kaalu-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in oklch, white 8%, transparent); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in oklch, white 14%, transparent); }

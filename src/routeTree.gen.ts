@@ -9,26 +9,35 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PresentationsRouteImport } from './routes/presentations'
-import { Route as IntelligenceRouteImport } from './routes/intelligence'
-import { Route as BreachRouteImport } from './routes/breach'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ArticleIdRouteImport } from './routes/article.$id'
-import { Route as ArchiveSourceRouteImport } from './routes/archive.$source'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/voice'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSebiRouteImport } from './routes/_authenticated/sebi'
+import { Route as AuthenticatedPresentationsRouteImport } from './routes/_authenticated/presentations'
+import { Route as AuthenticatedMarketsRouteImport } from './routes/_authenticated/markets'
+import { Route as AuthenticatedMailRouteImport } from './routes/_authenticated/mail'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCyberRouteImport } from './routes/_authenticated/cyber'
+import { Route as ApiVoiceTtsRouteImport } from './routes/api/voice/tts'
+import { Route as ApiVoiceSttRouteImport } from './routes/api/voice/stt'
+import { Route as ApiGraphSendRouteImport } from './routes/api/graph/send'
+import { Route as ApiGraphMessagesRouteImport } from './routes/api/graph/messages'
+import { Route as ApiGraphContactsRouteImport } from './routes/api/graph/contacts'
+import { Route as AuthenticatedVoiceConversationIdRouteImport } from './routes/_authenticated/voice.$conversationId'
+import { Route as AuthenticatedCyberArticleIdRouteImport } from './routes/_authenticated/cyber.$articleId'
+import { Route as ApiAuthMsStartRouteImport } from './routes/api/auth/ms/start'
+import { Route as ApiAuthMsCallbackRouteImport } from './routes/api/auth/ms/callback'
 
-const PresentationsRoute = PresentationsRouteImport.update({
-  id: '/presentations',
-  path: '/presentations',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IntelligenceRoute = IntelligenceRouteImport.update({
-  id: '/intelligence',
-  path: '/intelligence',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BreachRoute = BreachRouteImport.update({
-  id: '/breach',
-  path: '/breach',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -36,99 +45,266 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ArticleIdRoute = ArticleIdRouteImport.update({
-  id: '/article/$id',
-  path: '/article/$id',
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ArchiveSourceRoute = ArchiveSourceRouteImport.update({
-  id: '/archive/$source',
-  path: '/archive/$source',
+const AuthenticatedVoiceRoute = AuthenticatedVoiceRouteImport.update({
+  id: '/voice',
+  path: '/voice',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSebiRoute = AuthenticatedSebiRouteImport.update({
+  id: '/sebi',
+  path: '/sebi',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPresentationsRoute =
+  AuthenticatedPresentationsRouteImport.update({
+    id: '/presentations',
+    path: '/presentations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketsRoute = AuthenticatedMarketsRouteImport.update({
+  id: '/markets',
+  path: '/markets',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMailRoute = AuthenticatedMailRouteImport.update({
+  id: '/mail',
+  path: '/mail',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCyberRoute = AuthenticatedCyberRouteImport.update({
+  id: '/cyber',
+  path: '/cyber',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiVoiceTtsRoute = ApiVoiceTtsRouteImport.update({
+  id: '/api/voice/tts',
+  path: '/api/voice/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVoiceSttRoute = ApiVoiceSttRouteImport.update({
+  id: '/api/voice/stt',
+  path: '/api/voice/stt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGraphSendRoute = ApiGraphSendRouteImport.update({
+  id: '/api/graph/send',
+  path: '/api/graph/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGraphMessagesRoute = ApiGraphMessagesRouteImport.update({
+  id: '/api/graph/messages',
+  path: '/api/graph/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGraphContactsRoute = ApiGraphContactsRouteImport.update({
+  id: '/api/graph/contacts',
+  path: '/api/graph/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedVoiceConversationIdRoute =
+  AuthenticatedVoiceConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => AuthenticatedVoiceRoute,
+  } as any)
+const AuthenticatedCyberArticleIdRoute =
+  AuthenticatedCyberArticleIdRouteImport.update({
+    id: '/$articleId',
+    path: '/$articleId',
+    getParentRoute: () => AuthenticatedCyberRoute,
+  } as any)
+const ApiAuthMsStartRoute = ApiAuthMsStartRouteImport.update({
+  id: '/api/auth/ms/start',
+  path: '/api/auth/ms/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthMsCallbackRoute = ApiAuthMsCallbackRouteImport.update({
+  id: '/api/auth/ms/callback',
+  path: '/api/auth/ms/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/breach': typeof BreachRoute
-  '/intelligence': typeof IntelligenceRoute
-  '/presentations': typeof PresentationsRoute
-  '/archive/$source': typeof ArchiveSourceRoute
-  '/article/$id': typeof ArticleIdRoute
+  '/auth': typeof AuthRoute
+  '/cyber': typeof AuthenticatedCyberRouteWithChildren
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/mail': typeof AuthenticatedMailRoute
+  '/markets': typeof AuthenticatedMarketsRoute
+  '/presentations': typeof AuthenticatedPresentationsRoute
+  '/sebi': typeof AuthenticatedSebiRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/voice': typeof AuthenticatedVoiceRouteWithChildren
+  '/api/chat': typeof ApiChatRoute
+  '/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
+  '/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
+  '/api/graph/contacts': typeof ApiGraphContactsRoute
+  '/api/graph/messages': typeof ApiGraphMessagesRoute
+  '/api/graph/send': typeof ApiGraphSendRoute
+  '/api/voice/stt': typeof ApiVoiceSttRoute
+  '/api/voice/tts': typeof ApiVoiceTtsRoute
+  '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
+  '/api/auth/ms/start': typeof ApiAuthMsStartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/breach': typeof BreachRoute
-  '/intelligence': typeof IntelligenceRoute
-  '/presentations': typeof PresentationsRoute
-  '/archive/$source': typeof ArchiveSourceRoute
-  '/article/$id': typeof ArticleIdRoute
+  '/auth': typeof AuthRoute
+  '/cyber': typeof AuthenticatedCyberRouteWithChildren
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/mail': typeof AuthenticatedMailRoute
+  '/markets': typeof AuthenticatedMarketsRoute
+  '/presentations': typeof AuthenticatedPresentationsRoute
+  '/sebi': typeof AuthenticatedSebiRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/voice': typeof AuthenticatedVoiceRouteWithChildren
+  '/api/chat': typeof ApiChatRoute
+  '/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
+  '/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
+  '/api/graph/contacts': typeof ApiGraphContactsRoute
+  '/api/graph/messages': typeof ApiGraphMessagesRoute
+  '/api/graph/send': typeof ApiGraphSendRoute
+  '/api/voice/stt': typeof ApiVoiceSttRoute
+  '/api/voice/tts': typeof ApiVoiceTtsRoute
+  '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
+  '/api/auth/ms/start': typeof ApiAuthMsStartRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/breach': typeof BreachRoute
-  '/intelligence': typeof IntelligenceRoute
-  '/presentations': typeof PresentationsRoute
-  '/archive/$source': typeof ArchiveSourceRoute
-  '/article/$id': typeof ArticleIdRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/cyber': typeof AuthenticatedCyberRouteWithChildren
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/mail': typeof AuthenticatedMailRoute
+  '/_authenticated/markets': typeof AuthenticatedMarketsRoute
+  '/_authenticated/presentations': typeof AuthenticatedPresentationsRoute
+  '/_authenticated/sebi': typeof AuthenticatedSebiRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/voice': typeof AuthenticatedVoiceRouteWithChildren
+  '/api/chat': typeof ApiChatRoute
+  '/_authenticated/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
+  '/_authenticated/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
+  '/api/graph/contacts': typeof ApiGraphContactsRoute
+  '/api/graph/messages': typeof ApiGraphMessagesRoute
+  '/api/graph/send': typeof ApiGraphSendRoute
+  '/api/voice/stt': typeof ApiVoiceSttRoute
+  '/api/voice/tts': typeof ApiVoiceTtsRoute
+  '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
+  '/api/auth/ms/start': typeof ApiAuthMsStartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/breach'
-    | '/intelligence'
+    | '/auth'
+    | '/cyber'
+    | '/dashboard'
+    | '/mail'
+    | '/markets'
     | '/presentations'
-    | '/archive/$source'
-    | '/article/$id'
+    | '/sebi'
+    | '/settings'
+    | '/voice'
+    | '/api/chat'
+    | '/cyber/$articleId'
+    | '/voice/$conversationId'
+    | '/api/graph/contacts'
+    | '/api/graph/messages'
+    | '/api/graph/send'
+    | '/api/voice/stt'
+    | '/api/voice/tts'
+    | '/api/auth/ms/callback'
+    | '/api/auth/ms/start'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/breach'
-    | '/intelligence'
+    | '/auth'
+    | '/cyber'
+    | '/dashboard'
+    | '/mail'
+    | '/markets'
     | '/presentations'
-    | '/archive/$source'
-    | '/article/$id'
+    | '/sebi'
+    | '/settings'
+    | '/voice'
+    | '/api/chat'
+    | '/cyber/$articleId'
+    | '/voice/$conversationId'
+    | '/api/graph/contacts'
+    | '/api/graph/messages'
+    | '/api/graph/send'
+    | '/api/voice/stt'
+    | '/api/voice/tts'
+    | '/api/auth/ms/callback'
+    | '/api/auth/ms/start'
   id:
     | '__root__'
     | '/'
-    | '/breach'
-    | '/intelligence'
-    | '/presentations'
-    | '/archive/$source'
-    | '/article/$id'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/cyber'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/mail'
+    | '/_authenticated/markets'
+    | '/_authenticated/presentations'
+    | '/_authenticated/sebi'
+    | '/_authenticated/settings'
+    | '/_authenticated/voice'
+    | '/api/chat'
+    | '/_authenticated/cyber/$articleId'
+    | '/_authenticated/voice/$conversationId'
+    | '/api/graph/contacts'
+    | '/api/graph/messages'
+    | '/api/graph/send'
+    | '/api/voice/stt'
+    | '/api/voice/tts'
+    | '/api/auth/ms/callback'
+    | '/api/auth/ms/start'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BreachRoute: typeof BreachRoute
-  IntelligenceRoute: typeof IntelligenceRoute
-  PresentationsRoute: typeof PresentationsRoute
-  ArchiveSourceRoute: typeof ArchiveSourceRoute
-  ArticleIdRoute: typeof ArticleIdRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ApiChatRoute: typeof ApiChatRoute
+  ApiGraphContactsRoute: typeof ApiGraphContactsRoute
+  ApiGraphMessagesRoute: typeof ApiGraphMessagesRoute
+  ApiGraphSendRoute: typeof ApiGraphSendRoute
+  ApiVoiceSttRoute: typeof ApiVoiceSttRoute
+  ApiVoiceTtsRoute: typeof ApiVoiceTtsRoute
+  ApiAuthMsCallbackRoute: typeof ApiAuthMsCallbackRoute
+  ApiAuthMsStartRoute: typeof ApiAuthMsStartRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/presentations': {
-      id: '/presentations'
-      path: '/presentations'
-      fullPath: '/presentations'
-      preLoaderRoute: typeof PresentationsRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/intelligence': {
-      id: '/intelligence'
-      path: '/intelligence'
-      fullPath: '/intelligence'
-      preLoaderRoute: typeof IntelligenceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/breach': {
-      id: '/breach'
-      path: '/breach'
-      fullPath: '/breach'
-      preLoaderRoute: typeof BreachRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -138,30 +314,194 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/article/$id': {
-      id: '/article/$id'
-      path: '/article/$id'
-      fullPath: '/article/$id'
-      preLoaderRoute: typeof ArticleIdRouteImport
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/archive/$source': {
-      id: '/archive/$source'
-      path: '/archive/$source'
-      fullPath: '/archive/$source'
-      preLoaderRoute: typeof ArchiveSourceRouteImport
+    '/_authenticated/voice': {
+      id: '/_authenticated/voice'
+      path: '/voice'
+      fullPath: '/voice'
+      preLoaderRoute: typeof AuthenticatedVoiceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sebi': {
+      id: '/_authenticated/sebi'
+      path: '/sebi'
+      fullPath: '/sebi'
+      preLoaderRoute: typeof AuthenticatedSebiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/presentations': {
+      id: '/_authenticated/presentations'
+      path: '/presentations'
+      fullPath: '/presentations'
+      preLoaderRoute: typeof AuthenticatedPresentationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/markets': {
+      id: '/_authenticated/markets'
+      path: '/markets'
+      fullPath: '/markets'
+      preLoaderRoute: typeof AuthenticatedMarketsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mail': {
+      id: '/_authenticated/mail'
+      path: '/mail'
+      fullPath: '/mail'
+      preLoaderRoute: typeof AuthenticatedMailRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cyber': {
+      id: '/_authenticated/cyber'
+      path: '/cyber'
+      fullPath: '/cyber'
+      preLoaderRoute: typeof AuthenticatedCyberRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/voice/tts': {
+      id: '/api/voice/tts'
+      path: '/api/voice/tts'
+      fullPath: '/api/voice/tts'
+      preLoaderRoute: typeof ApiVoiceTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/voice/stt': {
+      id: '/api/voice/stt'
+      path: '/api/voice/stt'
+      fullPath: '/api/voice/stt'
+      preLoaderRoute: typeof ApiVoiceSttRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/graph/send': {
+      id: '/api/graph/send'
+      path: '/api/graph/send'
+      fullPath: '/api/graph/send'
+      preLoaderRoute: typeof ApiGraphSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/graph/messages': {
+      id: '/api/graph/messages'
+      path: '/api/graph/messages'
+      fullPath: '/api/graph/messages'
+      preLoaderRoute: typeof ApiGraphMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/graph/contacts': {
+      id: '/api/graph/contacts'
+      path: '/api/graph/contacts'
+      fullPath: '/api/graph/contacts'
+      preLoaderRoute: typeof ApiGraphContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/voice/$conversationId': {
+      id: '/_authenticated/voice/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/voice/$conversationId'
+      preLoaderRoute: typeof AuthenticatedVoiceConversationIdRouteImport
+      parentRoute: typeof AuthenticatedVoiceRoute
+    }
+    '/_authenticated/cyber/$articleId': {
+      id: '/_authenticated/cyber/$articleId'
+      path: '/$articleId'
+      fullPath: '/cyber/$articleId'
+      preLoaderRoute: typeof AuthenticatedCyberArticleIdRouteImport
+      parentRoute: typeof AuthenticatedCyberRoute
+    }
+    '/api/auth/ms/start': {
+      id: '/api/auth/ms/start'
+      path: '/api/auth/ms/start'
+      fullPath: '/api/auth/ms/start'
+      preLoaderRoute: typeof ApiAuthMsStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/ms/callback': {
+      id: '/api/auth/ms/callback'
+      path: '/api/auth/ms/callback'
+      fullPath: '/api/auth/ms/callback'
+      preLoaderRoute: typeof ApiAuthMsCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
+interface AuthenticatedCyberRouteChildren {
+  AuthenticatedCyberArticleIdRoute: typeof AuthenticatedCyberArticleIdRoute
+}
+
+const AuthenticatedCyberRouteChildren: AuthenticatedCyberRouteChildren = {
+  AuthenticatedCyberArticleIdRoute: AuthenticatedCyberArticleIdRoute,
+}
+
+const AuthenticatedCyberRouteWithChildren =
+  AuthenticatedCyberRoute._addFileChildren(AuthenticatedCyberRouteChildren)
+
+interface AuthenticatedVoiceRouteChildren {
+  AuthenticatedVoiceConversationIdRoute: typeof AuthenticatedVoiceConversationIdRoute
+}
+
+const AuthenticatedVoiceRouteChildren: AuthenticatedVoiceRouteChildren = {
+  AuthenticatedVoiceConversationIdRoute: AuthenticatedVoiceConversationIdRoute,
+}
+
+const AuthenticatedVoiceRouteWithChildren =
+  AuthenticatedVoiceRoute._addFileChildren(AuthenticatedVoiceRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCyberRoute: typeof AuthenticatedCyberRouteWithChildren
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedMailRoute: typeof AuthenticatedMailRoute
+  AuthenticatedMarketsRoute: typeof AuthenticatedMarketsRoute
+  AuthenticatedPresentationsRoute: typeof AuthenticatedPresentationsRoute
+  AuthenticatedSebiRoute: typeof AuthenticatedSebiRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedVoiceRoute: typeof AuthenticatedVoiceRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCyberRoute: AuthenticatedCyberRouteWithChildren,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedMailRoute: AuthenticatedMailRoute,
+  AuthenticatedMarketsRoute: AuthenticatedMarketsRoute,
+  AuthenticatedPresentationsRoute: AuthenticatedPresentationsRoute,
+  AuthenticatedSebiRoute: AuthenticatedSebiRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedVoiceRoute: AuthenticatedVoiceRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BreachRoute: BreachRoute,
-  IntelligenceRoute: IntelligenceRoute,
-  PresentationsRoute: PresentationsRoute,
-  ArchiveSourceRoute: ArchiveSourceRoute,
-  ArticleIdRoute: ArticleIdRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ApiChatRoute: ApiChatRoute,
+  ApiGraphContactsRoute: ApiGraphContactsRoute,
+  ApiGraphMessagesRoute: ApiGraphMessagesRoute,
+  ApiGraphSendRoute: ApiGraphSendRoute,
+  ApiVoiceSttRoute: ApiVoiceSttRoute,
+  ApiVoiceTtsRoute: ApiVoiceTtsRoute,
+  ApiAuthMsCallbackRoute: ApiAuthMsCallbackRoute,
+  ApiAuthMsStartRoute: ApiAuthMsStartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
