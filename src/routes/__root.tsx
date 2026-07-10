@@ -96,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "AI-powered cyber threat intelligence dashboard, voice agent, mail assistant, and presentation generator in one workspace.",
+          "Kaalu AI is an AI-powered cyber threat intelligence and executive productivity assistant: live SOC dashboard, CVE feed, voice agent, mail assistant, and AI presentation generator.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "twitter:description",
         content:
-          "Live cyber threat intelligence, CVE feed, voice AI, and productivity tools — one secure workspace.",
+          "Kaalu AI is an AI-powered cyber threat intelligence and executive productivity assistant: live SOC dashboard, CVE feed, voice agent, mail assistant, and AI presentation generator.",
       },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/da6be1d2-7677-4cbe-b0a9-2a845e06ef4b/id-preview-80fd9ada--080e4071-b0b2-41d2-963e-3870e8a19589.lovable.app-1782917885792.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/da6be1d2-7677-4cbe-b0a9-2a845e06ef4b/id-preview-80fd9ada--080e4071-b0b2-41d2-963e-3870e8a19589.lovable.app-1782917885792.png" },
