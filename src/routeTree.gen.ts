@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IntelligenceRouteImport } from './routes/intelligence'
+import { Route as BreachRouteImport } from './routes/breach'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ArticleIdRouteImport } from './routes/article.$id'
 import { Route as ArchiveSourceRouteImport } from './routes/archive.$source'
@@ -17,6 +18,11 @@ import { Route as ArchiveSourceRouteImport } from './routes/archive.$source'
 const IntelligenceRoute = IntelligenceRouteImport.update({
   id: '/intelligence',
   path: '/intelligence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BreachRoute = BreachRouteImport.update({
+  id: '/breach',
+  path: '/breach',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,12 +43,14 @@ const ArchiveSourceRoute = ArchiveSourceRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/breach': typeof BreachRoute
   '/intelligence': typeof IntelligenceRoute
   '/archive/$source': typeof ArchiveSourceRoute
   '/article/$id': typeof ArticleIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/breach': typeof BreachRoute
   '/intelligence': typeof IntelligenceRoute
   '/archive/$source': typeof ArchiveSourceRoute
   '/article/$id': typeof ArticleIdRoute
@@ -50,20 +58,33 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/breach': typeof BreachRoute
   '/intelligence': typeof IntelligenceRoute
   '/archive/$source': typeof ArchiveSourceRoute
   '/article/$id': typeof ArticleIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/intelligence' | '/archive/$source' | '/article/$id'
+  fullPaths:
+    | '/'
+    | '/breach'
+    | '/intelligence'
+    | '/archive/$source'
+    | '/article/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/intelligence' | '/archive/$source' | '/article/$id'
-  id: '__root__' | '/' | '/intelligence' | '/archive/$source' | '/article/$id'
+  to: '/' | '/breach' | '/intelligence' | '/archive/$source' | '/article/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/breach'
+    | '/intelligence'
+    | '/archive/$source'
+    | '/article/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BreachRoute: typeof BreachRoute
   IntelligenceRoute: typeof IntelligenceRoute
   ArchiveSourceRoute: typeof ArchiveSourceRoute
   ArticleIdRoute: typeof ArticleIdRoute
@@ -76,6 +97,13 @@ declare module '@tanstack/react-router' {
       path: '/intelligence'
       fullPath: '/intelligence'
       preLoaderRoute: typeof IntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/breach': {
+      id: '/breach'
+      path: '/breach'
+      fullPath: '/breach'
+      preLoaderRoute: typeof BreachRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -104,6 +132,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BreachRoute: BreachRoute,
   IntelligenceRoute: IntelligenceRoute,
   ArchiveSourceRoute: ArchiveSourceRoute,
   ArticleIdRoute: ArticleIdRoute,
