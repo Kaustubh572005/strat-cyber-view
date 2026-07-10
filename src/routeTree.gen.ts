@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PresentationsRouteImport } from './routes/presentations'
 import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as BreachRouteImport } from './routes/breach'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ArticleIdRouteImport } from './routes/article.$id'
 import { Route as ArchiveSourceRouteImport } from './routes/archive.$source'
 
+const PresentationsRoute = PresentationsRouteImport.update({
+  id: '/presentations',
+  path: '/presentations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IntelligenceRoute = IntelligenceRouteImport.update({
   id: '/intelligence',
   path: '/intelligence',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/breach': typeof BreachRoute
   '/intelligence': typeof IntelligenceRoute
+  '/presentations': typeof PresentationsRoute
   '/archive/$source': typeof ArchiveSourceRoute
   '/article/$id': typeof ArticleIdRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/breach': typeof BreachRoute
   '/intelligence': typeof IntelligenceRoute
+  '/presentations': typeof PresentationsRoute
   '/archive/$source': typeof ArchiveSourceRoute
   '/article/$id': typeof ArticleIdRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/breach': typeof BreachRoute
   '/intelligence': typeof IntelligenceRoute
+  '/presentations': typeof PresentationsRoute
   '/archive/$source': typeof ArchiveSourceRoute
   '/article/$id': typeof ArticleIdRoute
 }
@@ -69,15 +78,23 @@ export interface FileRouteTypes {
     | '/'
     | '/breach'
     | '/intelligence'
+    | '/presentations'
     | '/archive/$source'
     | '/article/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/breach' | '/intelligence' | '/archive/$source' | '/article/$id'
+  to:
+    | '/'
+    | '/breach'
+    | '/intelligence'
+    | '/presentations'
+    | '/archive/$source'
+    | '/article/$id'
   id:
     | '__root__'
     | '/'
     | '/breach'
     | '/intelligence'
+    | '/presentations'
     | '/archive/$source'
     | '/article/$id'
   fileRoutesById: FileRoutesById
@@ -86,12 +103,20 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BreachRoute: typeof BreachRoute
   IntelligenceRoute: typeof IntelligenceRoute
+  PresentationsRoute: typeof PresentationsRoute
   ArchiveSourceRoute: typeof ArchiveSourceRoute
   ArticleIdRoute: typeof ArticleIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/presentations': {
+      id: '/presentations'
+      path: '/presentations'
+      fullPath: '/presentations'
+      preLoaderRoute: typeof PresentationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/intelligence': {
       id: '/intelligence'
       path: '/intelligence'
@@ -134,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BreachRoute: BreachRoute,
   IntelligenceRoute: IntelligenceRoute,
+  PresentationsRoute: PresentationsRoute,
   ArchiveSourceRoute: ArchiveSourceRoute,
   ArticleIdRoute: ArticleIdRoute,
 }

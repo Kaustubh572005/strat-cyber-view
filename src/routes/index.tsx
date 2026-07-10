@@ -23,11 +23,20 @@ const feedsQuery = queryOptions({
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    // Kick a background refresh once so the DB has something to show; ignore errors.
-    try {
-      await refreshFeeds({ data: {} });
-    } catch { /* non-blocking */ }
-    await context.queryClient.ensureQueryData(feedsQuery);
+    const cached = await context.queryClient.ensureQueryData(feedsQuery);
+    const isEmpty = Object.values(cached).every((arr) => arr.length === 0);
+    if (isEmpty) {
+      try {
+        await refreshFeeds({ data: {} });
+        await context.queryClient.invalidateQueries({ queryKey: ["feeds"] });
+        await context.queryClient.ensureQueryData(feedsQuery);
+      } catch { /* non-blocking */ }
+    } else {
+      // Fire-and-forget refresh so next visit is fresh.
+      refreshFeeds({ data: {} })
+        .then(() => context.queryClient.invalidateQueries({ queryKey: ["feeds"] }))
+        .catch(() => {});
+    }
   },
   component: Dashboard,
   errorComponent: ({ error }) => (
