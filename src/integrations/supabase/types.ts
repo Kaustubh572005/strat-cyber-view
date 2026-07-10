@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          pinned: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_drafts: {
+        Row: {
+          bcc_recipients: Json
+          body: string
+          cc_recipients: Json
+          created_at: string
+          id: string
+          reply_to_message_id: string | null
+          status: string
+          subject: string
+          to_recipients: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bcc_recipients?: Json
+          body?: string
+          cc_recipients?: Json
+          created_at?: string
+          id?: string
+          reply_to_message_id?: string | null
+          status?: string
+          subject?: string
+          to_recipients?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bcc_recipients?: Json
+          body?: string
+          cc_recipients?: Json
+          created_at?: string
+          id?: string
+          reply_to_message_id?: string | null
+          status?: string
+          subject?: string
+          to_recipients?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       feed_items: {
         Row: {
           ai_summary: string | null
@@ -53,6 +122,170 @@ export type Database = {
           severity?: string | null
           source?: string
           title?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          kind: string
+          parts: Json | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          kind?: string
+          parts?: Json | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          parts?: Json | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      microsoft_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          ms_account_id: string | null
+          ms_display_name: string | null
+          ms_email: string | null
+          refresh_token: string
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          ms_account_id?: string | null
+          ms_display_name?: string | null
+          ms_email?: string | null
+          refresh_token: string
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          ms_account_id?: string | null
+          ms_display_name?: string | null
+          ms_email?: string | null
+          refresh_token?: string
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      presentation_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          size_bytes: number
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          size_bytes?: number
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          size_bytes?: number
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          ms_display_name: string | null
+          ms_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          ms_display_name?: string | null
+          ms_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          ms_display_name?: string | null
+          ms_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          auto_speak: boolean
+          tone: string
+          updated_at: string
+          user_id: string
+          voice: string
+        }
+        Insert: {
+          auto_speak?: boolean
+          tone?: string
+          updated_at?: string
+          user_id: string
+          voice?: string
+        }
+        Update: {
+          auto_speak?: boolean
+          tone?: string
+          updated_at?: string
+          user_id?: string
+          voice?: string
         }
         Relationships: []
       }
