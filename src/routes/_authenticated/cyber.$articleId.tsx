@@ -33,10 +33,12 @@ function ArticleDetail() {
     queryFn: () => getArt({ data: { id: articleId } }),
   });
 
-  const list = feed?.top ?? [];
+  const list = [...(feed?.top ?? []), ...(feed?.all ?? []).filter((a) => !feed?.top.some((t) => t.id === a.id))];
   const idx = list.findIndex((a) => a.id === articleId);
   const prev = idx > 0 ? list[idx - 1] : null;
   const next = idx >= 0 && idx < list.length - 1 ? list[idx + 1] : null;
+  const related = (feed?.all ?? []).filter((a) => a.id !== articleId && a.category === data?.article.category).slice(0, 4);
+
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
