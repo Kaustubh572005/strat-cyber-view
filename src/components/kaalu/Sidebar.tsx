@@ -23,6 +23,7 @@ import {
   Sparkles,
   History,
   LayoutDashboard,
+  Package,
   ShieldAlert,
   Presentation,
   FileText,
