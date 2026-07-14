@@ -98,7 +98,30 @@ function ArticleDetail() {
             <InfoList label="Tags" items={data.detail.tags} />
           </section>
 
+          {related.length > 0 && (
+            <section className="mt-6">
+              <h3 className="text-sm uppercase tracking-widest text-muted-foreground mb-3">Related Articles</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {related.map((r) => (
+                  <Link
+                    key={r.id}
+                    to="/cyber/$articleId"
+                    params={{ articleId: r.id }}
+                    className="glass rounded-xl p-3 border border-white/5 hover:border-primary/40 transition block"
+                  >
+                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <span className={`px-1.5 rounded border ${sevColor[r.severity]}`}>{r.severity}</span>
+                      <span>{r.source}</span>
+                    </div>
+                    <div className="text-sm font-medium mt-1 line-clamp-2">{r.title}</div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           <nav className="mt-8 flex items-center justify-between border-t border-white/5 pt-4">
+
             {prev ? (
               <Button variant="ghost" onClick={() => navigate({ to: "/cyber/$articleId", params: { articleId: prev.id } })}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Previous
