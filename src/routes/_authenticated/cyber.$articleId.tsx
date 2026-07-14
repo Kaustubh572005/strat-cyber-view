@@ -66,11 +66,13 @@ function ArticleDetail() {
           <a
             href={data.article.link}
             target="_blank"
-            rel="noreferrer"
-            className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 text-sm bg-primary text-primary-foreground rounded-lg px-3.5 py-2 hover:bg-primary/90 transition font-medium"
           >
-            Read original <ExternalLink className="h-3 w-3" />
+            Read Full Article <ExternalLink className="h-3.5 w-3.5" />
           </a>
+          <div className="mt-1.5 text-[11px] text-muted-foreground">Opens the original publisher ({data.article.source}) in a new tab.</div>
+
 
           <section className="mt-6 glass rounded-xl p-5 border border-white/5">
             <h2 className="text-sm uppercase tracking-widest text-muted-foreground mb-2">AI Summary</h2>
