@@ -256,25 +256,30 @@ function CyberPage() {
       {/* Data Breach Scanner */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="glass rounded-xl p-5 border border-white/5">
-          <h2 className="text-lg font-semibold mb-1">Data Breach Scanner</h2>
-          <p className="text-xs text-muted-foreground mb-3">
-            Search by email or domain. Full HIBP integration requires an API key — add
-            <code className="mx-1 px-1 bg-white/5 rounded">HIBP_API_KEY</code> in Settings to enable live lookups.
-          </p>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
-              <Input
-                value={breachQuery}
-                onChange={(e) => setBreachQuery(e.target.value)}
-                placeholder="you@example.com or example.com"
-                className="pl-8 bg-white/5 border-white/10"
-              />
-            </div>
-            <Button variant="secondary" disabled>Scan</Button>
+          <div className="flex items-center gap-2 mb-2">
+            <ShieldAlert className="h-4 w-4 text-primary" />
+            <h2 className="text-lg font-semibold">Data Breach Checker</h2>
           </div>
-          <div className="text-xs text-muted-foreground mt-3">
-            Awaiting <code className="px-1 bg-white/5 rounded">HIBP_API_KEY</code> secret.
+          <p className="text-sm text-muted-foreground mb-4">
+            Check whether your email address or phone number has appeared in a known data breach.
+            Kaalu links you to the trusted, official source — <span className="text-foreground">Have I Been Pwned</span>,
+            operated by security researcher Troy Hunt.
+          </p>
+          <ul className="text-xs text-muted-foreground space-y-1.5 mb-5 list-disc pl-4">
+            <li>Search by email address or phone number</li>
+            <li>See every known breach and paste your data appeared in</li>
+            <li>Subscribe to notifications for future breaches</li>
+          </ul>
+          <a
+            href="https://haveibeenpwned.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition"
+          >
+            Open Have I Been Pwned <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+          <div className="mt-3 text-[11px] text-muted-foreground">
+            Opens in a new tab. Kaalu never stores or transmits your email during this check.
           </div>
         </div>
 
@@ -284,6 +289,7 @@ function CyberPage() {
           <SecurityReminders />
         </div>
       </section>
+
 
       <style>{`
         @keyframes marquee {
