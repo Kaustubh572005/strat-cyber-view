@@ -12,12 +12,12 @@ import {
   Globe2,
   Radio,
   ExternalLink,
-  Search,
   Clock,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
 
 export const Route = createFileRoute("/_authenticated/cyber")({
   component: CyberPage,
