@@ -23,6 +23,7 @@ import {
   Sparkles,
   History,
   LayoutDashboard,
+  Package,
   ShieldAlert,
   Presentation,
   FileText,
@@ -147,6 +148,15 @@ export function Sidebar() {
           icon={<Presentation className="h-4 w-4" />}
           label="Presentation Generator"
         />
+        <a
+          href="https://sbom-workbench.lovable.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition text-muted-foreground hover:text-foreground hover:bg-white/5"
+        >
+          <Package className="h-4 w-4" />
+          <span className="font-medium">SBOM Workbench</span>
+        </a>
       </nav>
 
       {isVoiceActive && (
