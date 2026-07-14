@@ -33,10 +33,12 @@ function ArticleDetail() {
     queryFn: () => getArt({ data: { id: articleId } }),
   });
 
-  const list = feed?.top ?? [];
+  const list = [...(feed?.top ?? []), ...(feed?.all ?? []).filter((a) => !feed?.top.some((t) => t.id === a.id))];
   const idx = list.findIndex((a) => a.id === articleId);
   const prev = idx > 0 ? list[idx - 1] : null;
   const next = idx >= 0 && idx < list.length - 1 ? list[idx + 1] : null;
+  const related = (feed?.all ?? []).filter((a) => a.id !== articleId && a.category === data?.article.category).slice(0, 4);
+
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
@@ -64,11 +66,13 @@ function ArticleDetail() {
           <a
             href={data.article.link}
             target="_blank"
-            rel="noreferrer"
-            className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 text-sm bg-primary text-primary-foreground rounded-lg px-3.5 py-2 hover:bg-primary/90 transition font-medium"
           >
-            Read original <ExternalLink className="h-3 w-3" />
+            Read Full Article <ExternalLink className="h-3.5 w-3.5" />
           </a>
+          <div className="mt-1.5 text-[11px] text-muted-foreground">Opens the original publisher ({data.article.source}) in a new tab.</div>
+
 
           <section className="mt-6 glass rounded-xl p-5 border border-white/5">
             <h2 className="text-sm uppercase tracking-widest text-muted-foreground mb-2">AI Summary</h2>
@@ -94,7 +98,30 @@ function ArticleDetail() {
             <InfoList label="Tags" items={data.detail.tags} />
           </section>
 
+          {related.length > 0 && (
+            <section className="mt-6">
+              <h3 className="text-sm uppercase tracking-widest text-muted-foreground mb-3">Related Articles</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {related.map((r) => (
+                  <Link
+                    key={r.id}
+                    to="/cyber/$articleId"
+                    params={{ articleId: r.id }}
+                    className="glass rounded-xl p-3 border border-white/5 hover:border-primary/40 transition block"
+                  >
+                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <span className={`px-1.5 rounded border ${sevColor[r.severity]}`}>{r.severity}</span>
+                      <span>{r.source}</span>
+                    </div>
+                    <div className="text-sm font-medium mt-1 line-clamp-2">{r.title}</div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           <nav className="mt-8 flex items-center justify-between border-t border-white/5 pt-4">
+
             {prev ? (
               <Button variant="ghost" onClick={() => navigate({ to: "/cyber/$articleId", params: { articleId: prev.id } })}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Previous

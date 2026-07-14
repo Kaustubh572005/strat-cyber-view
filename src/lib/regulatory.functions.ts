@@ -134,56 +134,92 @@ export const getSebiCirculars = createServerFn({ method: "GET" }).handler(async 
   return { items: enriched, kpis, updatedAt: new Date().toISOString() };
 });
 
-// Best-effort financial-markets aggregator. NSE/BSE don't publish reliable
-// public RSS, so we route through Google News for them; CERT-In has a real
-// feed. Cyber vulnerabilities come from the shared cyber feed cache.
+const CYBER_RE = /cyber|security|infosec|information security|vapt|breach|hack|ransomware|malware|phish|it\s?system|technology risk|resilience|data\s?protection|privacy/i;
+
 export const getMarketsIntel = createServerFn({ method: "GET" }).handler(async () => {
-  const [certIn, nse, bse, sebi] = await Promise.all([
+  const [certIn, nseAll, bseAll, nseCyberFeed, bseCyberFeed, sebi] = await Promise.all([
     fetchRss({
       id: "cert-in",
       source: "CERT-In",
       url: "https://www.cert-in.org.in/RSS/latestnews.xml",
       category: "Advisory",
-      max: 25,
+      max: 30,
     }),
     fetchRss({
       id: "nse-google",
       source: "NSE India",
       url: "https://news.google.com/rss/search?q=NSE+India+circular+OR+announcement&hl=en-IN&gl=IN&ceid=IN:en",
       category: "Announcement",
-      max: 20,
+      max: 25,
     }),
     fetchRss({
       id: "bse-google",
       source: "BSE India",
       url: "https://news.google.com/rss/search?q=BSE+India+notice+OR+circular&hl=en-IN&gl=IN&ceid=IN:en",
       category: "Announcement",
+      max: 25,
+    }),
+    fetchRss({
+      id: "nse-cyber-google",
+      source: "NSE Cybersecurity",
+      url: "https://news.google.com/rss/search?q=%22NSE+India%22+(cybersecurity+OR+cyber+OR+%22information+security%22+OR+VAPT+OR+%22technology+risk%22)&hl=en-IN&gl=IN&ceid=IN:en",
+      category: "Cybersecurity",
+      max: 20,
+    }),
+    fetchRss({
+      id: "bse-cyber-google",
+      source: "BSE Cybersecurity",
+      url: "https://news.google.com/rss/search?q=%22BSE+India%22+(cybersecurity+OR+cyber+OR+%22information+security%22+OR+VAPT+OR+%22technology+risk%22)&hl=en-IN&gl=IN&ceid=IN:en",
+      category: "Cybersecurity",
       max: 20,
     }),
     fetchSebi(),
   ]);
-  const merged = [...certIn, ...nse, ...bse, ...sebi.slice(0, 15)];
+  // Keyword-filter NSE/BSE cyber feeds as an extra safety net + also pull any
+  // cyber items from the general NSE/BSE feeds.
+  const nseCyber = [
+    ...nseCyberFeed.filter((i) => CYBER_RE.test(`${i.title} ${i.snippet}`)),
+    ...nseAll.filter((i) => CYBER_RE.test(`${i.title} ${i.snippet}`)),
+  ];
+  const bseCyber = [
+    ...bseCyberFeed.filter((i) => CYBER_RE.test(`${i.title} ${i.snippet}`)),
+    ...bseAll.filter((i) => CYBER_RE.test(`${i.title} ${i.snippet}`)),
+  ];
+  // De-dupe by id (Google News re-uses ids across queries occasionally)
+  const dedupe = (arr: RegItem[]) => {
+    const seen = new Set<string>();
+    return arr.filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
+  };
+  const nseCyberDedup = dedupe(nseCyber);
+  const bseCyberDedup = dedupe(bseCyber);
+
+  const merged = [...certIn, ...nseAll, ...bseAll, ...sebi.slice(0, 15)];
   merged.sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1));
   const today = new Date().toDateString();
   const kpis = {
     circularsToday: sebi.filter((i) => new Date(i.publishedAt).toDateString() === today).length,
     certInAdvisories: certIn.length,
-    nseAnnouncements: nse.length,
-    bseAnnouncements: bse.length,
+    nseAnnouncements: nseAll.length,
+    bseAnnouncements: bseAll.length,
+    nseCyber: nseCyberDedup.length,
+    bseCyber: bseCyberDedup.length,
     criticalKeywords: merged.filter((i) => /critical|zero.?day|ransomware|breach|exploit/i.test(i.title)).length,
   };
   return {
     items: merged,
     grouped: {
       certIn,
-      nse,
-      bse,
+      nse: nseAll,
+      bse: bseAll,
+      nseCyber: nseCyberDedup,
+      bseCyber: bseCyberDedup,
       sebi: sebi.slice(0, 15),
     },
     kpis,
     updatedAt: new Date().toISOString(),
   };
 });
+
 
 export const summarizeRegItem = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
