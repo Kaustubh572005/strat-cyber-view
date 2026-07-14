@@ -46,8 +46,8 @@ function CyberPage() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const [breachQuery, setBreachQuery] = useState("");
   const [cveSeverity, setCveSeverity] = useState<string>("ALL");
+
   const filteredCves = useMemo(
     () => (cveSeverity === "ALL" ? cveRows : cveRows.filter((c) => c.severity === cveSeverity)),
     [cveRows, cveSeverity],
