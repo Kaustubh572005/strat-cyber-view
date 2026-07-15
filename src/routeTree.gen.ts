@@ -28,6 +28,7 @@ import { Route as ApiGraphMessagesRouteImport } from './routes/api/graph/message
 import { Route as ApiGraphContactsRouteImport } from './routes/api/graph/contacts'
 import { Route as AuthenticatedVoiceConversationIdRouteImport } from './routes/_authenticated/voice.$conversationId'
 import { Route as AuthenticatedCyberArticleIdRouteImport } from './routes/_authenticated/cyber.$articleId'
+import { Route as ApiPublicSyncSourceRouteImport } from './routes/api/public/sync/$source'
 import { Route as ApiAuthMsStartRouteImport } from './routes/api/auth/ms/start'
 import { Route as ApiAuthMsCallbackRouteImport } from './routes/api/auth/ms/callback'
 
@@ -128,6 +129,11 @@ const AuthenticatedCyberArticleIdRoute =
     path: '/$articleId',
     getParentRoute: () => AuthenticatedCyberRoute,
   } as any)
+const ApiPublicSyncSourceRoute = ApiPublicSyncSourceRouteImport.update({
+  id: '/api/public/sync/$source',
+  path: '/api/public/sync/$source',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthMsStartRoute = ApiAuthMsStartRouteImport.update({
   id: '/api/auth/ms/start',
   path: '/api/auth/ms/start',
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/api/voice/tts': typeof ApiVoiceTtsRoute
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
+  '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/api/voice/tts': typeof ApiVoiceTtsRoute
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
+  '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/api/voice/tts': typeof ApiVoiceTtsRoute
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
+  '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/api/voice/tts'
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
+    | '/api/public/sync/$source'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/api/voice/tts'
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
+    | '/api/public/sync/$source'
   id:
     | '__root__'
     | '/'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/api/voice/tts'
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
+    | '/api/public/sync/$source'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -289,6 +301,7 @@ export interface RootRouteChildren {
   ApiVoiceTtsRoute: typeof ApiVoiceTtsRoute
   ApiAuthMsCallbackRoute: typeof ApiAuthMsCallbackRoute
   ApiAuthMsStartRoute: typeof ApiAuthMsStartRoute
+  ApiPublicSyncSourceRoute: typeof ApiPublicSyncSourceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -426,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCyberArticleIdRouteImport
       parentRoute: typeof AuthenticatedCyberRoute
     }
+    '/api/public/sync/$source': {
+      id: '/api/public/sync/$source'
+      path: '/api/public/sync/$source'
+      fullPath: '/api/public/sync/$source'
+      preLoaderRoute: typeof ApiPublicSyncSourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/ms/start': {
       id: '/api/auth/ms/start'
       path: '/api/auth/ms/start'
@@ -502,6 +522,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiVoiceTtsRoute: ApiVoiceTtsRoute,
   ApiAuthMsCallbackRoute: ApiAuthMsCallbackRoute,
   ApiAuthMsStartRoute: ApiAuthMsStartRoute,
+  ApiPublicSyncSourceRoute: ApiPublicSyncSourceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
