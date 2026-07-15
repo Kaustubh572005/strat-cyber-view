@@ -18,6 +18,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSebiRouteImport } from './routes/_authenticated/sebi'
 import { Route as AuthenticatedPresentationsRouteImport } from './routes/_authenticated/presentations'
 import { Route as AuthenticatedNseRouteImport } from './routes/_authenticated/nse'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMailRouteImport } from './routes/_authenticated/mail'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCyberRouteImport } from './routes/_authenticated/cyber'
@@ -78,6 +79,12 @@ const AuthenticatedNseRoute = AuthenticatedNseRouteImport.update({
   path: '/nse',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMailRoute = AuthenticatedMailRouteImport.update({
   id: '/mail',
   path: '/mail',
@@ -158,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/mail': typeof AuthenticatedMailRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/nse': typeof AuthenticatedNseRoute
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
@@ -182,6 +190,7 @@ export interface FileRoutesByTo {
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/mail': typeof AuthenticatedMailRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/nse': typeof AuthenticatedNseRoute
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
@@ -208,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/mail': typeof AuthenticatedMailRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/nse': typeof AuthenticatedNseRoute
   '/_authenticated/presentations': typeof AuthenticatedPresentationsRoute
   '/_authenticated/sebi': typeof AuthenticatedSebiRoute
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/cyber'
     | '/dashboard'
     | '/mail'
+    | '/notifications'
     | '/nse'
     | '/presentations'
     | '/sebi'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/cyber'
     | '/dashboard'
     | '/mail'
+    | '/notifications'
     | '/nse'
     | '/presentations'
     | '/sebi'
@@ -283,6 +295,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cyber'
     | '/_authenticated/dashboard'
     | '/_authenticated/mail'
+    | '/_authenticated/notifications'
     | '/_authenticated/nse'
     | '/_authenticated/presentations'
     | '/_authenticated/sebi'
@@ -379,6 +392,13 @@ declare module '@tanstack/react-router' {
       path: '/nse'
       fullPath: '/nse'
       preLoaderRoute: typeof AuthenticatedNseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/mail': {
@@ -509,6 +529,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCyberRoute: typeof AuthenticatedCyberRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMailRoute: typeof AuthenticatedMailRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedNseRoute: typeof AuthenticatedNseRoute
   AuthenticatedPresentationsRoute: typeof AuthenticatedPresentationsRoute
   AuthenticatedSebiRoute: typeof AuthenticatedSebiRoute
@@ -521,6 +542,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCyberRoute: AuthenticatedCyberRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMailRoute: AuthenticatedMailRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedNseRoute: AuthenticatedNseRoute,
   AuthenticatedPresentationsRoute: AuthenticatedPresentationsRoute,
   AuthenticatedSebiRoute: AuthenticatedSebiRoute,
