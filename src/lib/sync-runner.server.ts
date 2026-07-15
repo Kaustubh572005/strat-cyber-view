@@ -14,7 +14,7 @@ export type NormalizedItem = {
   published_at?: string | null;
   snippet?: string | null;
   attachment_url?: string | null;
-  raw?: Record<string, unknown> | null;
+  raw?: any;
 };
 
 export type NseItem = {
