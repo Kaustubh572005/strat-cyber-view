@@ -17,7 +17,6 @@ import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSebiRouteImport } from './routes/_authenticated/sebi'
 import { Route as AuthenticatedPresentationsRouteImport } from './routes/_authenticated/presentations'
-import { Route as AuthenticatedMarketsRouteImport } from './routes/_authenticated/markets'
 import { Route as AuthenticatedMailRouteImport } from './routes/_authenticated/mail'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCyberRouteImport } from './routes/_authenticated/cyber'
@@ -72,11 +71,6 @@ const AuthenticatedPresentationsRoute =
     path: '/presentations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMarketsRoute = AuthenticatedMarketsRouteImport.update({
-  id: '/markets',
-  path: '/markets',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedMailRoute = AuthenticatedMailRouteImport.update({
   id: '/mail',
   path: '/mail',
@@ -151,7 +145,6 @@ export interface FileRoutesByFullPath {
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/mail': typeof AuthenticatedMailRoute
-  '/markets': typeof AuthenticatedMarketsRoute
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -174,7 +167,6 @@ export interface FileRoutesByTo {
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/mail': typeof AuthenticatedMailRoute
-  '/markets': typeof AuthenticatedMarketsRoute
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -199,7 +191,6 @@ export interface FileRoutesById {
   '/_authenticated/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/mail': typeof AuthenticatedMailRoute
-  '/_authenticated/markets': typeof AuthenticatedMarketsRoute
   '/_authenticated/presentations': typeof AuthenticatedPresentationsRoute
   '/_authenticated/sebi': typeof AuthenticatedSebiRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -224,7 +215,6 @@ export interface FileRouteTypes {
     | '/cyber'
     | '/dashboard'
     | '/mail'
-    | '/markets'
     | '/presentations'
     | '/sebi'
     | '/settings'
@@ -247,7 +237,6 @@ export interface FileRouteTypes {
     | '/cyber'
     | '/dashboard'
     | '/mail'
-    | '/markets'
     | '/presentations'
     | '/sebi'
     | '/settings'
@@ -271,7 +260,6 @@ export interface FileRouteTypes {
     | '/_authenticated/cyber'
     | '/_authenticated/dashboard'
     | '/_authenticated/mail'
-    | '/_authenticated/markets'
     | '/_authenticated/presentations'
     | '/_authenticated/sebi'
     | '/_authenticated/settings'
@@ -360,13 +348,6 @@ declare module '@tanstack/react-router' {
       path: '/presentations'
       fullPath: '/presentations'
       preLoaderRoute: typeof AuthenticatedPresentationsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/markets': {
-      id: '/_authenticated/markets'
-      path: '/markets'
-      fullPath: '/markets'
-      preLoaderRoute: typeof AuthenticatedMarketsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/mail': {
@@ -489,7 +470,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCyberRoute: typeof AuthenticatedCyberRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMailRoute: typeof AuthenticatedMailRoute
-  AuthenticatedMarketsRoute: typeof AuthenticatedMarketsRoute
   AuthenticatedPresentationsRoute: typeof AuthenticatedPresentationsRoute
   AuthenticatedSebiRoute: typeof AuthenticatedSebiRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -500,7 +480,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCyberRoute: AuthenticatedCyberRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMailRoute: AuthenticatedMailRoute,
-  AuthenticatedMarketsRoute: AuthenticatedMarketsRoute,
   AuthenticatedPresentationsRoute: AuthenticatedPresentationsRoute,
   AuthenticatedSebiRoute: AuthenticatedSebiRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

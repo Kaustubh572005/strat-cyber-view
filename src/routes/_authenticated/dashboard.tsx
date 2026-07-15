@@ -1,71 +1,105 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getCyberFeed, getLatestCves, type CyberArticle } from "@/lib/cyber.functions";
-import { getMarketsIntel, type RegItem } from "@/lib/regulatory.functions";
 import {
-  ShieldAlert, Bug, FileText, Building2, Landmark, Newspaper, Sparkles,
-  ArrowRight, TrendingUp, ExternalLink, Activity, Cpu, RefreshCw, ShieldCheck,
+  listArticles,
+  listNseDisclosures,
+  listSourceStatus,
+  refreshSource,
+  type FeedArticle,
+  type NseDisclosureRow,
+  type SourceStatus,
+} from "@/lib/feeds.functions";
+import { listNotifications } from "@/lib/notifications.functions";
+import {
+  ShieldAlert,
+  FileText,
+  Building2,
+  Newspaper,
+  Cpu,
+  Sparkles,
+  ArrowRight,
+  RefreshCw,
+  Bell,
+  ExternalLink,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-const REFRESH_MS = 5 * 60 * 1000;
+const POLL_MS = 5 * 60 * 1000;
 
 function DashboardPage() {
-  const getFeed = useServerFn(getCyberFeed);
-  const getCves = useServerFn(getLatestCves);
-  const getMarkets = useServerFn(getMarketsIntel);
+  const getArticles = useServerFn(listArticles);
+  const getNse = useServerFn(listNseDisclosures);
+  const getStatus = useServerFn(listSourceStatus);
+  const getNotifs = useServerFn(listNotifications);
 
   const feedQ = useQuery({
-    queryKey: ["cyber-feed"],
-    queryFn: () => getFeed(),
-    refetchInterval: REFRESH_MS,
+    queryKey: ["dashboard-articles"],
+    queryFn: () =>
+      getArticles({
+        data: {
+          source_keys: ["sebi-whats-new", "cert-in", "cyber-news", "ai-news"],
+          limit: 400,
+        },
+      }),
+    refetchInterval: POLL_MS,
     refetchOnWindowFocus: true,
-    staleTime: 60 * 1000,
+    staleTime: 60_000,
   });
-  const cvesQ = useQuery({
-    queryKey: ["latest-cves"],
-    queryFn: () => getCves(),
-    refetchInterval: REFRESH_MS,
-    staleTime: 60 * 1000,
+  const nseQ = useQuery({
+    queryKey: ["dashboard-nse"],
+    queryFn: () => getNse({ data: { limit: 30 } }),
+    refetchInterval: POLL_MS,
+    staleTime: 60_000,
   });
-  const marketsQ = useQuery({
-    queryKey: ["markets-intel"],
-    queryFn: () => getMarkets(),
-    refetchInterval: REFRESH_MS,
-    refetchOnWindowFocus: true,
-    staleTime: 60 * 1000,
+  const statusQ = useQuery({
+    queryKey: ["source-status"],
+    queryFn: () => getStatus(),
+    refetchInterval: POLL_MS,
+    staleTime: 30_000,
+  });
+  const notifQ = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => getNotifs({ data: { limit: 20 } }),
+    refetchInterval: POLL_MS,
+    staleTime: 30_000,
   });
 
-  // Track ids we've already seen to flag "New" items across refreshes.
-  const seenIdsRef = useRef<Set<string> | null>(null);
+  const articles = feedQ.data ?? [];
+  const byKey = (k: string) => articles.filter((a) => a.source_key === k);
+  const cyberNews = byKey("cyber-news");
+  const aiNews = byKey("ai-news");
+  const sebi = byKey("sebi-whats-new");
+  const certIn = byKey("cert-in");
+  const nse = nseQ.data ?? [];
+  const notifs = (notifQ.data ?? []).filter((n) => !n.dismissed);
+
+  // Track newness
+  const seenRef = useRef<Set<string> | null>(null);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const [firstLoad, setFirstLoad] = useState(true);
 
   const allIds = useMemo(() => {
     const ids: string[] = [];
-    feedQ.data?.top.forEach((a) => ids.push(a.id));
-    feedQ.data?.ai.forEach((a) => ids.push(a.id));
-    marketsQ.data?.grouped.sebi.forEach((a) => ids.push(a.id));
-    marketsQ.data?.grouped.certIn.forEach((a) => ids.push(a.id));
-    marketsQ.data?.grouped.nseCyber.forEach((a) => ids.push(a.id));
-    marketsQ.data?.grouped.bseCyber.forEach((a) => ids.push(a.id));
+    articles.forEach((a) => ids.push(a.id));
+    nse.forEach((r) => ids.push(r.id));
     return ids;
-  }, [feedQ.data, marketsQ.data]);
+  }, [articles, nse]);
 
   useEffect(() => {
     if (allIds.length === 0) return;
-    if (seenIdsRef.current === null) {
-      seenIdsRef.current = new Set(allIds);
+    if (seenRef.current === null) {
+      seenRef.current = new Set(allIds);
       setFirstLoad(false);
       return;
     }
-    const seen = seenIdsRef.current;
+    const seen = seenRef.current;
     const fresh = allIds.filter((id) => !seen.has(id));
     if (fresh.length > 0) {
       fresh.forEach((id) => seen.add(id));
@@ -74,10 +108,7 @@ function DashboardPage() {
         fresh.forEach((id) => next.add(id));
         return next;
       });
-      toast.success(`${fresh.length} new intelligence update${fresh.length === 1 ? "" : "s"}`, {
-        description: "Dashboard refreshed with the latest information.",
-      });
-      // Auto-expire the "New" flag after 15 minutes so it doesn't stay forever.
+      toast.success(`${fresh.length} new intelligence update${fresh.length === 1 ? "" : "s"}`);
       setTimeout(() => {
         setNewIds((prev) => {
           const next = new Set(prev);
@@ -88,30 +119,15 @@ function DashboardPage() {
     }
   }, [allIds]);
 
-  const cves = cvesQ.data ?? [];
-  const critCves = cves.filter((c) => (c.cvss ?? 0) >= 9).length;
-  const highCves = cves.filter((c) => (c.cvss ?? 0) >= 7 && (c.cvss ?? 0) < 9).length;
-  const feed = feedQ.data;
-  const markets = marketsQ.data;
-  const today = new Date().toDateString();
-  const anyLoading = feedQ.isFetching || cvesQ.isFetching || marketsQ.isFetching;
-
-  const cyberToday = feed?.all.filter((a) => new Date(a.publishedAt).toDateString() === today).length ?? 0;
-  const breachesWeek = feed?.all.filter((a) => {
-    if (!/breach|ransomware|leak/i.test(`${a.title} ${a.snippet}`)) return false;
-    return Date.now() - new Date(a.publishedAt).getTime() < 7 * 864e5;
-  }).length ?? 0;
-
-  const riskScore = useMemo(() => {
-    const raw = critCves * 8 + highCves * 3 + breachesWeek * 4 + (markets?.kpis.certInAdvisories ?? 0) * 1.5;
-    return Math.min(100, Math.round(raw));
-  }, [critCves, highCves, breachesWeek, markets]);
-  const riskBand = riskScore >= 75 ? "Elevated" : riskScore >= 50 ? "Moderate" : riskScore >= 25 ? "Guarded" : "Low";
-  const riskColor = riskScore >= 75 ? "text-red-400" : riskScore >= 50 ? "text-orange-300" : riskScore >= 25 ? "text-yellow-300" : "text-emerald-400";
-
-  const updatedAt = feed?.updatedAt ?? markets?.updatedAt;
-
   const isNew = (id: string) => !firstLoad && newIds.has(id);
+  const today = new Date().toDateString();
+  const isToday = (iso: string | null) => (iso ? new Date(iso).toDateString() === today : false);
+
+  const critical = articles.filter((a) => a.severity === "critical").length;
+  const cyberToday = cyberNews.filter((a) => isToday(a.published_at)).length;
+  const sebiToday = sebi.filter((a) => isToday(a.published_at)).length;
+  const certToday = certIn.filter((a) => isToday(a.published_at)).length;
+  const nseToday = nse.filter((r) => isToday(r.notice_datetime)).length;
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -120,185 +136,247 @@ function DashboardPage() {
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Cyber Command Center</div>
           <h1 className="text-3xl font-semibold neon-text mt-1">Executive Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Live aggregation of cyber threats, CVEs, SEBI, CERT-In, and exchange cybersecurity notices. Auto-refreshes every 5 minutes.
+            Live aggregation from SEBI, CERT-In, NSE cybersecurity notices, and global cyber &amp; AI news.
+            Data is synced hourly to a permanent repository. Page auto-refreshes every 5 minutes.
           </p>
         </div>
-        <div className="text-xs text-muted-foreground flex items-center gap-2">
-          <RefreshCw className={`h-3.5 w-3.5 ${anyLoading ? "animate-spin text-primary" : ""}`} />
-          {updatedAt ? `Updated ${new Date(updatedAt).toLocaleTimeString()}` : "Loading…"}
-        </div>
+        <RefreshAllButton />
       </header>
 
+      {/* AI Daily Brief */}
+      <section className="glass rounded-2xl p-5 border border-primary/20 bg-primary/[0.03]">
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary mb-2">
+          <Sparkles className="h-3.5 w-3.5" /> Kaalu's Daily Brief
+        </div>
+        <p className="text-sm leading-relaxed">
+          Good day, Sir. Today there are{" "}
+          <b className="text-foreground">{sebiToday}</b> new SEBI item{sebiToday === 1 ? "" : "s"},{" "}
+          <b className="text-foreground">{certToday}</b> new CERT-In advisor{certToday === 1 ? "y" : "ies"},{" "}
+          <b className="text-foreground">{nseToday}</b> new NSE cybersecurity notice{nseToday === 1 ? "" : "s"}, and{" "}
+          <b className="text-foreground">{cyberToday}</b> new cybersecurity news article{cyberToday === 1 ? "" : "s"}.
+          {critical > 0 ? (
+            <>
+              {" "}
+              The feed contains{" "}
+              <b className="text-red-400">{critical} critical-severity</b> item{critical === 1 ? "" : "s"} —
+              please review the Cyber Intelligence page.
+            </>
+          ) : (
+            <> No critical items at this time.</>
+          )}
+        </p>
+      </section>
+
       {/* KPI grid */}
-      <section className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
-        <KpiTile to="/cyber" icon={Newspaper} label="Cyber news today" value={cyberToday} loading={feedQ.isLoading} />
-        <KpiTile to="/markets" icon={Bug} label="Critical CVEs" value={critCves} loading={cvesQ.isLoading} accent />
-        <KpiTile to="/markets" icon={Bug} label="High CVEs" value={highCves} loading={cvesQ.isLoading} />
-        <KpiTile to="/markets" icon={ShieldAlert} label="CERT-In" value={markets?.kpis.certInAdvisories ?? 0} loading={marketsQ.isLoading} />
-        <KpiTile to="/sebi" icon={FileText} label="SEBI today" value={markets?.kpis.circularsToday ?? 0} loading={marketsQ.isLoading} />
-        <KpiTile to="/markets" icon={Building2} label="NSE Cyber" value={markets?.kpis.nseCyber ?? 0} loading={marketsQ.isLoading} />
-        <KpiTile to="/markets" icon={Landmark} label="BSE Cyber" value={markets?.kpis.bseCyber ?? 0} loading={marketsQ.isLoading} />
-        <KpiTile to="/markets" icon={Activity} label="Breaches (7d)" value={breachesWeek} loading={feedQ.isLoading} />
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <Kpi icon={FileText} label="SEBI today" value={sebiToday} total={sebi.length} to="/sebi" />
+        <Kpi icon={ShieldAlert} label="CERT-In today" value={certToday} total={certIn.length} to="/cert-in" />
+        <Kpi icon={Building2} label="NSE cyber today" value={nseToday} total={nse.length} to="/nse" />
+        <Kpi icon={Newspaper} label="Cyber news today" value={cyberToday} total={cyberNews.length} to="/cyber" />
+        <Kpi icon={Cpu} label="AI updates today" value={aiNews.filter((a) => isToday(a.published_at)).length} total={aiNews.length} to="/cyber" />
       </section>
 
-      {/* Brief + Risk */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 glass rounded-2xl p-5 border border-primary/20 bg-primary/[0.03]">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary mb-2">
-            <Sparkles className="h-3.5 w-3.5" /> Kaalu's Daily Brief
-          </div>
-          <p className="text-sm leading-relaxed">
-            Good day, Sir. Today the feed shows{" "}
-            <b className="text-foreground">{critCves} critical</b> and{" "}
-            <b className="text-foreground">{highCves} high-severity</b> vulnerabilities,{" "}
-            <b className="text-foreground">{markets?.kpis.certInAdvisories ?? 0}</b> CERT-In advisories, and{" "}
-            <b className="text-foreground">{markets?.kpis.circularsToday ?? 0}</b> new SEBI circulars.{" "}
-            {breachesWeek > 0 ? (
-              <>There have been <b className="text-foreground">{breachesWeek}</b> breach or ransomware reports this week — recommend reviewing the Vulnerabilities section.</>
-            ) : (
-              <>No major breach reports this week. Focus on the top CVEs listed below.</>
-            )}
-          </p>
-        </div>
-        <div className="glass rounded-2xl p-5 border border-white/5">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-            <TrendingUp className="h-3.5 w-3.5" /> Cyber Risk Score
-          </div>
-          <div className={`text-4xl font-semibold ${riskColor}`}>{riskScore}<span className="text-lg text-muted-foreground">/100</span></div>
-          <div className={`text-xs mt-1 ${riskColor}`}>{riskBand}</div>
-          <div className="mt-3 h-1.5 rounded-full bg-white/5 overflow-hidden">
-            <div className={`h-full ${riskScore >= 75 ? "bg-red-400" : riskScore >= 50 ? "bg-orange-300" : riskScore >= 25 ? "bg-yellow-300" : "bg-emerald-400"}`} style={{ width: `${riskScore}%` }} />
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-3">
-            Composite of critical CVEs, CERT-In advisories, and breach velocity.
-          </p>
-        </div>
-      </section>
+      {/* Source health */}
+      <SourceHealthStrip status={statusQ.data ?? []} />
 
-      {/* Cybersecurity News */}
+      {/* Feed sections */}
       <FeedSection
         icon={Newspaper}
         title="Cybersecurity News"
         subtitle="Latest global cyber threat headlines"
-        viewAllLabel="View All Cyber News"
         viewAllTo="/cyber"
+        sourceKey="cyber-news"
+        items={cyberNews.slice(0, 8)}
         loading={feedQ.isLoading}
-        empty="No cyber news available."
-      >
-        {(feed?.top ?? []).slice(0, 6).map((a) => (
-          <CyberCard key={a.id} article={a} isNew={isNew(a.id)} />
-        ))}
-      </FeedSection>
+        isNew={isNew}
+        renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="primary" />}
+      />
 
-      {/* SEBI Circulars */}
       <FeedSection
         icon={FileText}
-        title="SEBI Circulars"
-        subtitle="Latest official Securities and Exchange Board of India circulars"
-        viewAllLabel="View All SEBI Circulars"
+        title="SEBI What's New"
+        subtitle="Latest items from SEBI's official What's New feed"
         viewAllTo="/sebi"
-        loading={marketsQ.isLoading}
-        empty="No SEBI circulars available right now."
-      >
-        {(markets?.grouped.sebi ?? []).slice(0, 6).map((a) => (
-          <RegCard key={a.id} item={a} isNew={isNew(a.id)} tone="primary" />
-        ))}
-      </FeedSection>
+        sourceKey="sebi-whats-new"
+        items={sebi.slice(0, 8)}
+        loading={feedQ.isLoading}
+        isNew={isNew}
+        renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="primary" showCategory />}
+      />
 
-      {/* CERT-In Advisories */}
       <FeedSection
         icon={ShieldAlert}
         title="CERT-In Advisories"
-        subtitle="Indian Computer Emergency Response Team — official advisories"
-        viewAllLabel="View All CERT-In Advisories"
-        viewAllTo="/markets"
-        loading={marketsQ.isLoading}
-        empty="No CERT-In advisories available."
-      >
-        {(markets?.grouped.certIn ?? []).slice(0, 6).map((a) => (
-          <RegCard key={a.id} item={a} isNew={isNew(a.id)} tone="red" showSeverity />
-        ))}
-      </FeedSection>
+        subtitle="Indian Computer Emergency Response Team advisories"
+        viewAllTo="/cert-in"
+        sourceKey="cert-in"
+        items={certIn.slice(0, 8)}
+        loading={feedQ.isLoading}
+        isNew={isNew}
+        renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="red" showSeverity />}
+      />
 
-      {/* NSE Cybersecurity */}
-      <FeedSection
-        icon={Building2}
-        title="NSE Cybersecurity Announcements"
-        subtitle="Cybersecurity, information security and technology security notices from NSE"
-        viewAllLabel="View All NSE Cybersecurity Announcements"
-        viewAllTo="/markets"
-        loading={marketsQ.isLoading}
-        empty="No cybersecurity-specific NSE announcements right now."
-      >
-        {(markets?.grouped.nseCyber ?? []).slice(0, 6).map((a) => (
-          <RegCard key={a.id} item={a} isNew={isNew(a.id)} tone="cyan" />
-        ))}
-      </FeedSection>
+      <NseSection items={nse.slice(0, 8)} loading={nseQ.isLoading} isNew={isNew} />
 
-      {/* BSE Cybersecurity */}
-      <FeedSection
-        icon={Landmark}
-        title="BSE Cybersecurity Announcements"
-        subtitle="Cybersecurity, information security and technology security notices from BSE"
-        viewAllLabel="View All BSE Cybersecurity Announcements"
-        viewAllTo="/markets"
-        loading={marketsQ.isLoading}
-        empty="No cybersecurity-specific BSE announcements right now."
-      >
-        {(markets?.grouped.bseCyber ?? []).slice(0, 6).map((a) => (
-          <RegCard key={a.id} item={a} isNew={isNew(a.id)} tone="amber" />
-        ))}
-      </FeedSection>
-
-      {/* AI & Emerging Tech */}
       <FeedSection
         icon={Cpu}
         title="AI & Emerging Technology"
         subtitle="AI advances and their security implications"
-        viewAllLabel="View All AI News"
         viewAllTo="/cyber"
+        sourceKey="ai-news"
+        items={aiNews.slice(0, 8)}
         loading={feedQ.isLoading}
-        empty="No AI news right now."
-      >
-        {(feed?.ai ?? []).slice(0, 6).map((a) => (
-          <CyberCard key={a.id} article={a} isNew={isNew(a.id)} />
-        ))}
-      </FeedSection>
+        isNew={isNew}
+        renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="cyan" />}
+      />
+
+      {/* Notification Center preview */}
+      <section className="glass rounded-2xl p-5 border border-white/5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-primary" />
+            <h2 className="text-base font-semibold">Notification Center</h2>
+            {notifs.length > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40">
+                {notifs.length} unread
+              </span>
+            )}
+          </div>
+          <Link
+            to="/notifications"
+            className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
+          >
+            View all <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        {notifs.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No unread notifications.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {notifs.slice(0, 5).map((n) => (
+              <li key={n.id} className="text-sm flex items-start gap-2">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground shrink-0 mt-1">
+                  {n.source_key}
+                </span>
+                <span className="line-clamp-1">{n.title}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
 
-function KpiTile({
-  to, icon: Icon, label, value, loading, accent,
+function Kpi({
+  icon: Icon,
+  label,
+  value,
+  total,
+  to,
 }: {
-  to: "/cyber" | "/markets" | "/sebi" | "/mail" | "/presentations" | "/voice";
   icon: React.ComponentType<{ className?: string }>;
-  label: string; value: number; loading?: boolean; accent?: boolean;
+  label: string;
+  value: number;
+  total: number;
+  to: string;
 }) {
   return (
     <Link
-      to={to}
-      className={`group glass rounded-xl p-3.5 border transition ${accent ? "border-primary/40 hover:border-primary/70" : "border-white/5 hover:border-white/20"}`}
+      to={to as any}
+      className="group glass rounded-xl p-3.5 border border-white/5 hover:border-primary/40 transition block"
     >
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
         <Icon className="h-3.5 w-3.5" /> {label}
       </div>
-      <div className={`text-2xl font-semibold mt-1 ${accent ? "text-primary" : ""}`}>
-        {loading ? <span className="inline-block h-6 w-10 bg-white/5 rounded animate-pulse" /> : value}
-      </div>
+      <div className="text-2xl font-semibold mt-1">{value}</div>
+      <div className="text-[10px] text-muted-foreground mt-0.5">of {total} in repository</div>
     </Link>
   );
 }
 
+function RefreshAllButton() {
+  const qc = useQueryClient();
+  const refresh = useServerFn(refreshSource);
+  const mut = useMutation({
+    mutationFn: () => refresh({ data: { source_key: "all" } }),
+    onSuccess: (res) => {
+      const total = res.results.reduce((s, r) => s + r.added, 0);
+      toast.success(`Sync complete — ${total} new item${total === 1 ? "" : "s"}`);
+      qc.invalidateQueries();
+    },
+    onError: (e) => toast.error((e as Error).message || "Sync failed"),
+  });
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={() => mut.mutate()}
+      disabled={mut.isPending}
+      className="gap-2"
+    >
+      <RefreshCw className={`h-3.5 w-3.5 ${mut.isPending ? "animate-spin" : ""}`} />
+      {mut.isPending ? "Syncing…" : "Refresh all"}
+    </Button>
+  );
+}
+
+function SourceHealthStrip({ status }: { status: SourceStatus[] }) {
+  if (status.length === 0) return null;
+  return (
+    <section className="glass rounded-xl p-3 border border-white/5 flex flex-wrap gap-3 text-xs">
+      {status.map((s) => (
+        <div key={s.source_key} className="flex items-center gap-2">
+          <span
+            className={`h-2 w-2 rounded-full ${
+              s.last_status === "ok"
+                ? "bg-emerald-400"
+                : s.last_status === "error"
+                  ? "bg-red-400"
+                  : "bg-yellow-400"
+            }`}
+          />
+          <span className="text-muted-foreground">{s.display_name}</span>
+          <span className="text-[10px] text-muted-foreground">
+            {s.last_synced_at ? new Date(s.last_synced_at).toLocaleTimeString() : "not yet"}
+          </span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function FeedSection({
-  icon: Icon, title, subtitle, viewAllLabel, viewAllTo, loading, empty, children,
+  icon: Icon,
+  title,
+  subtitle,
+  viewAllTo,
+  sourceKey,
+  items,
+  loading,
+  renderer,
 }: {
   icon: React.ComponentType<{ className?: string }>;
-  title: string; subtitle: string;
-  viewAllLabel: string; viewAllTo: "/cyber" | "/markets" | "/sebi";
-  loading?: boolean; empty: string; children: React.ReactNode;
+  title: string;
+  subtitle: string;
+  viewAllTo: string;
+  sourceKey: string;
+  items: FeedArticle[];
+  loading: boolean;
+  isNew: (id: string) => boolean;
+  renderer: (a: FeedArticle) => React.ReactNode;
 }) {
-  const count = Array.isArray(children) ? children.length : (children ? 1 : 0);
+  const qc = useQueryClient();
+  const refresh = useServerFn(refreshSource);
+  const mut = useMutation({
+    mutationFn: () => refresh({ data: { source_key: sourceKey as any } }),
+    onSuccess: (res) => {
+      const r = res.results[0];
+      toast.success(`${title} — ${r.added} new`);
+      qc.invalidateQueries();
+    },
+    onError: (e) => toast.error((e as Error).message || "Sync failed"),
+  });
   return (
     <section className="glass rounded-2xl p-5 border border-white/5">
       <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
@@ -311,21 +389,109 @@ function FeedSection({
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           </div>
         </div>
-        <Link
-          to={viewAllTo}
-          className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
-        >
-          {viewAllLabel} <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse" />)}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => mut.mutate()}
+            disabled={mut.isPending}
+            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1 border border-white/10 rounded-full px-3 py-1.5 hover:bg-white/5 transition"
+          >
+            <RefreshCw className={`h-3 w-3 ${mut.isPending ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+          <Link
+            to={viewAllTo as any}
+            className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
+          >
+            View all <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
-      ) : count === 0 ? (
-        <div className="text-sm text-muted-foreground py-8 text-center">{empty}</div>
+      </div>
+      {loading && items.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-sm text-muted-foreground py-8 text-center">
+          No items yet. Click Refresh to fetch the latest.
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">{children}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {items.map(renderer)}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function NseSection({
+  items,
+  loading,
+  isNew,
+}: {
+  items: NseDisclosureRow[];
+  loading: boolean;
+  isNew: (id: string) => boolean;
+}) {
+  const qc = useQueryClient();
+  const refresh = useServerFn(refreshSource);
+  const mut = useMutation({
+    mutationFn: () => refresh({ data: { source_key: "nse-cyber" } }),
+    onSuccess: (res) => {
+      const r = res.results[0];
+      toast.success(`NSE Cybersecurity — ${r.added} new`);
+      qc.invalidateQueries();
+    },
+    onError: (e) => toast.error((e as Error).message || "Sync failed"),
+  });
+  return (
+    <section className="glass rounded-2xl p-5 border border-white/5">
+      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+        <div className="flex items-start gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+            <Building2 className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">NSE Cybersecurity Notices</h2>
+            <p className="text-xs text-muted-foreground">
+              Cybersecurity / information security disclosures filed on the NSE
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => mut.mutate()}
+            disabled={mut.isPending}
+            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1 border border-white/10 rounded-full px-3 py-1.5 hover:bg-white/5 transition"
+          >
+            <RefreshCw className={`h-3 w-3 ${mut.isPending ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+          <Link
+            to="/nse"
+            className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
+          >
+            View all <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+      </div>
+      {loading && items.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-sm text-muted-foreground py-8 text-center">
+          No NSE cybersecurity notices yet. Click Refresh.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {items.map((r) => (
+            <NseCard key={r.id} row={r} isNew={isNew(r.id)} />
+          ))}
+        </div>
       )}
     </section>
   );
@@ -347,83 +513,110 @@ function NewBadge() {
   );
 }
 
-function CyberCard({ article, isNew }: { article: CyberArticle; isNew?: boolean }) {
+function ArticleCard({
+  article,
+  isNew,
+  showSeverity,
+  showCategory,
+}: {
+  article: FeedArticle;
+  isNew?: boolean;
+  tone?: string;
+  showSeverity?: boolean;
+  showCategory?: boolean;
+}) {
+  const sev = article.severity ?? "info";
   return (
-    <Link
-      to="/cyber/$articleId"
-      params={{ articleId: article.id }}
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noreferrer"
       className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition block group"
     >
       <div className="flex items-center gap-1.5 flex-wrap mb-2">
-        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${sevColor[article.severity]}`}>{article.severity}</span>
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{article.source}</span>
+        {showSeverity && <span className={`text-[10px] px-1.5 py-0.5 rounded border ${sevColor[sev] ?? sevColor.info}`}>{sev}</span>}
+        {showCategory && article.category && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 uppercase tracking-widest text-muted-foreground">
+            {article.category}
+          </span>
+        )}
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {article.publisher ?? article.source_key}
+        </span>
         {isNew && <NewBadge />}
       </div>
       <div className="font-medium text-sm leading-snug group-hover:text-primary transition line-clamp-2">
         {article.title}
       </div>
-      <div className="mt-2 flex items-start gap-1.5">
-        <Sparkles className="h-3 w-3 text-primary shrink-0 mt-0.5" />
-        <p className="text-xs text-muted-foreground line-clamp-3">{article.snippet}</p>
-      </div>
-      <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
-        <span>{new Date(article.publishedAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-        <span className="inline-flex items-center gap-1 group-hover:text-primary transition">
-          Read <ArrowRight className="h-3 w-3" />
-        </span>
-      </div>
-    </Link>
-  );
-}
-
-const toneBorder: Record<string, string> = {
-  primary: "hover:border-primary/40",
-  red: "hover:border-red-500/40",
-  cyan: "hover:border-cyan-500/40",
-  amber: "hover:border-amber-500/40",
-};
-
-function detectSev(text: string): "critical" | "high" | "medium" | "low" | "info" {
-  const t = text.toLowerCase();
-  if (/critical|zero.?day|actively exploited|severe/.test(t)) return "critical";
-  if (/high|urgent|exploit|ransomware/.test(t)) return "high";
-  if (/medium|moderate|advisory|warning/.test(t)) return "medium";
-  return "info";
-}
-
-function RegCard({
-  item, isNew, tone, showSeverity,
-}: { item: RegItem; isNew?: boolean; tone: "primary" | "red" | "cyan" | "amber"; showSeverity?: boolean }) {
-  const sev = showSeverity ? detectSev(`${item.title} ${item.snippet}`) : null;
-  return (
-    <a
-      href={item.link}
-      target="_blank"
-      rel="noreferrer"
-      className={`glass rounded-xl p-4 border border-white/5 ${toneBorder[tone]} transition block group`}
-    >
-      <div className="flex items-center gap-1.5 flex-wrap mb-2">
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 uppercase tracking-widest text-muted-foreground">
-          {item.category}
-        </span>
-        {sev && <span className={`text-[10px] px-1.5 py-0.5 rounded border ${sevColor[sev]}`}>{sev}</span>}
-        {isNew && <NewBadge />}
-      </div>
-      <div className="font-medium text-sm leading-snug group-hover:text-primary transition line-clamp-2">
-        {item.title}
-      </div>
-      {item.snippet && (
+      {article.snippet && (
         <div className="mt-2 flex items-start gap-1.5">
           <Sparkles className="h-3 w-3 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground line-clamp-3">{item.snippet}</p>
+          <p className="text-xs text-muted-foreground line-clamp-3">
+            {article.ai_summary ?? article.snippet}
+          </p>
         </div>
       )}
       <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
-        <span>{new Date(item.publishedAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+        <span>
+          {article.published_at
+            ? new Date(article.published_at).toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : new Date(article.created_at).toLocaleDateString()}
+        </span>
         <span className="inline-flex items-center gap-1 group-hover:text-primary transition">
           Open <ExternalLink className="h-3 w-3" />
         </span>
       </div>
     </a>
+  );
+}
+
+function NseCard({ row, isNew }: { row: NseDisclosureRow; isNew?: boolean }) {
+  return (
+    <div className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition">
+      <div className="flex items-center gap-1.5 flex-wrap mb-2">
+        {row.incident_type && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300 border border-orange-500/30 uppercase tracking-widest">
+            {row.incident_type}
+          </span>
+        )}
+        {row.symbol && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 uppercase tracking-widest text-muted-foreground">
+            {row.symbol}
+          </span>
+        )}
+        {isNew && <NewBadge />}
+      </div>
+      <div className="font-medium text-sm leading-snug line-clamp-2">
+        {row.company_name ?? "NSE Filing"}
+      </div>
+      <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{row.subject}</div>
+      <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>
+          {row.notice_datetime
+            ? new Date(row.notice_datetime).toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "—"}
+        </span>
+        {row.attachment_url && (
+          <a
+            href={row.attachment_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 hover:text-primary"
+          >
+            Attachment <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
+      </div>
+    </div>
   );
 }
