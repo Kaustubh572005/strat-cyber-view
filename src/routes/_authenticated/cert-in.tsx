@@ -1,64 +1,68 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listArticles, refreshSource, type FeedArticle } from "@/lib/feeds.functions";
-import { FileText, RefreshCw, ExternalLink, Download, Sparkles, Search as SearchIcon } from "lucide-react";
+import { ShieldAlert, RefreshCw, ExternalLink, Sparkles, Download, Search as SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 
-export const Route = createFileRoute("/_authenticated/sebi")({
-  component: SebiPage,
+export const Route = createFileRoute("/_authenticated/cert-in")({
+  component: CertInPage,
 });
 
-function SebiPage() {
+const sevColor: Record<string, string> = {
+  critical: "bg-red-500/20 text-red-300 border-red-500/40",
+  high: "bg-orange-500/20 text-orange-300 border-orange-500/40",
+  medium: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40",
+  low: "bg-blue-500/20 text-blue-300 border-blue-500/40",
+  info: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+};
+
+function CertInPage() {
   const get = useServerFn(listArticles);
   const refresh = useServerFn(refreshSource);
   const qc = useQueryClient();
   const [q, setQ] = useState("");
-  const [category, setCategory] = useState("ALL");
+  const [sev, setSev] = useState("ALL");
 
   const query = useQuery({
-    queryKey: ["sebi-articles"],
-    queryFn: () => get({ data: { source_key: "sebi-whats-new", limit: 500 } }),
+    queryKey: ["cert-articles"],
+    queryFn: () => get({ data: { source_key: "cert-in", limit: 500 } }),
     refetchInterval: 5 * 60 * 1000,
     staleTime: 60_000,
   });
   const mut = useMutation({
-    mutationFn: () => refresh({ data: { source_key: "sebi-whats-new" } }),
+    mutationFn: () => refresh({ data: { source_key: "cert-in" } }),
     onSuccess: (r) => {
-      toast.success(`SEBI — ${r.results[0].added} new item${r.results[0].added === 1 ? "" : "s"}`);
-      qc.invalidateQueries({ queryKey: ["sebi-articles"] });
+      toast.success(`CERT-In — ${r.results[0].added} new`);
+      qc.invalidateQueries({ queryKey: ["cert-articles"] });
     },
     onError: (e) => toast.error((e as Error).message),
   });
 
   const items = query.data ?? [];
-  const categories = useMemo(
-    () => Array.from(new Set(items.map((i) => i.category).filter(Boolean))) as string[],
-    [items],
-  );
   const filtered = useMemo(() => {
     const s = q.toLowerCase();
     return items.filter((a) => {
-      if (category !== "ALL" && a.category !== category) return false;
+      if (sev !== "ALL" && a.severity !== sev.toLowerCase()) return false;
       if (!s) return true;
       return a.title.toLowerCase().includes(s) || (a.snippet ?? "").toLowerCase().includes(s);
     });
-  }, [items, q, category]);
+  }, [items, q, sev]);
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">SEBI</div>
-          <h1 className="text-3xl font-semibold neon-text mt-1">SEBI What's New</h1>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">CERT-In</div>
+          <h1 className="text-3xl font-semibold neon-text mt-1">CERT-In Advisories</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Permanent repository of every SEBI What's New item. Sourced from{" "}
-            <a href="https://www.sebi.gov.in/sebirss.xml" target="_blank" rel="noreferrer" className="underline">
-              sebi.gov.in
+            Permanent repository of every CERT-In advisory. Sourced from{" "}
+            <a href="https://www.cert-in.org.in" target="_blank" rel="noreferrer" className="underline">
+              cert-in.org.in
             </a>
-            . Auto-refreshes every 5 minutes; new items are appended, never replaced.
+            . Auto-refreshes every 5 minutes.
           </p>
         </div>
         <button
@@ -77,24 +81,27 @@ function SebiPage() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search title or content…"
+            placeholder="Search advisories…"
             className="h-9 pl-8 text-sm bg-white/5 border-white/10"
           />
         </div>
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="h-9 rounded-md bg-white/5 border border-white/10 px-2 text-sm"
-        >
-          <option value="ALL">All categories</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
+        <div className="flex gap-1">
+          {["ALL", "critical", "high", "medium", "info"].map((s) => (
+            <button
+              key={s}
+              onClick={() => setSev(s)}
+              className={`text-[11px] px-2 py-1 rounded border ${
+                sev === s
+                  ? "bg-primary/20 border-primary/40 text-primary"
+                  : "border-white/10 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {s.toUpperCase()}
+            </button>
           ))}
-        </select>
+        </div>
         <span className="text-xs text-muted-foreground">
-          {filtered.length} of {items.length} items
+          {filtered.length} of {items.length} advisories
         </span>
       </section>
 
@@ -102,12 +109,12 @@ function SebiPage() {
         <div className="text-sm text-muted-foreground">Loading repository…</div>
       ) : filtered.length === 0 ? (
         <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-white/5">
-          No matching items. Try clearing filters or clicking Refresh.
+          No matching advisories. Try clearing filters or Refresh.
         </div>
       ) : (
         <ul className="space-y-2">
           {filtered.map((a) => (
-            <SebiRow key={a.id} article={a} />
+            <CertRow key={a.id} article={a} />
           ))}
         </ul>
       )}
@@ -115,29 +122,23 @@ function SebiPage() {
   );
 }
 
-function SebiRow({ article }: { article: FeedArticle }) {
-  const isPdf = article.attachment_url || article.url.endsWith(".pdf");
+function CertRow({ article }: { article: FeedArticle }) {
+  const sev = article.severity ?? "info";
   return (
-    <li className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition">
+    <li className="glass rounded-xl p-4 border border-white/5 hover:border-red-500/40 transition">
       <div className="flex items-start gap-3 flex-wrap">
-        <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <ShieldAlert className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap mb-1">
-            {article.category && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary uppercase tracking-widest">
-                {article.category}
-              </span>
-            )}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${sevColor[sev] ?? sevColor.info}`}>
+              {sev}
+            </span>
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              {article.publisher ?? "SEBI"}
+              {article.publisher ?? "CERT-In"}
             </span>
             <span className="text-[10px] text-muted-foreground">
               {article.published_at
-                ? new Date(article.published_at).toLocaleString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })
+                ? new Date(article.published_at).toLocaleDateString()
                 : new Date(article.created_at).toLocaleDateString()}
             </span>
           </div>
@@ -152,7 +153,7 @@ function SebiRow({ article }: { article: FeedArticle }) {
           {(article.ai_summary || article.snippet) && (
             <div className="mt-1.5 flex items-start gap-1.5">
               <Sparkles className="h-3 w-3 text-primary shrink-0 mt-0.5" />
-              <p className="text-xs text-muted-foreground line-clamp-2">
+              <p className="text-xs text-muted-foreground line-clamp-3">
                 {article.ai_summary ?? article.snippet}
               </p>
             </div>
@@ -167,14 +168,14 @@ function SebiRow({ article }: { article: FeedArticle }) {
           >
             Open <ExternalLink className="h-3 w-3" />
           </a>
-          {isPdf && (
+          {article.attachment_url && (
             <a
-              href={article.attachment_url ?? article.url}
+              href={article.attachment_url}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
             >
-              <Download className="h-3 w-3" /> PDF
+              <Download className="h-3 w-3" /> Download
             </a>
           )}
         </div>

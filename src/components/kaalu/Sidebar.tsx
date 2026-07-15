@@ -27,8 +27,10 @@ import {
   ShieldAlert,
   Presentation,
   FileText,
-  TrendingUp,
+  Building2,
+  Bell,
 } from "lucide-react";
+
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -76,10 +78,13 @@ export function Sidebar() {
   const isCyber = location.pathname.startsWith("/cyber");
   const isPresentations = location.pathname.startsWith("/presentations");
   const isSebi = location.pathname.startsWith("/sebi");
-  const isMarkets = location.pathname.startsWith("/markets");
+  const isCertIn = location.pathname.startsWith("/cert-in");
+  const isNse = location.pathname.startsWith("/nse");
+  const isNotifs = location.pathname.startsWith("/notifications");
   const isVoiceActive =
     location.pathname.startsWith("/voice") ||
-    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isMarkets);
+    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isCertIn && !isNse && !isNotifs);
+
 
   async function signOut() {
     await qc.cancelQueries();
@@ -128,14 +133,27 @@ export function Sidebar() {
           active={isSebi}
           onClick={() => navigate({ to: "/sebi" })}
           icon={<FileText className="h-4 w-4" />}
-          label="SEBI Circulars"
+          label="SEBI What's New"
         />
         <NavItem
-          active={isMarkets}
-          onClick={() => navigate({ to: "/markets" })}
-          icon={<TrendingUp className="h-4 w-4" />}
-          label="Financial Markets"
+          active={isCertIn}
+          onClick={() => navigate({ to: "/cert-in" })}
+          icon={<ShieldAlert className="h-4 w-4" />}
+          label="CERT-In Advisories"
         />
+        <NavItem
+          active={isNse}
+          onClick={() => navigate({ to: "/nse" })}
+          icon={<Building2 className="h-4 w-4" />}
+          label="NSE Cybersecurity"
+        />
+        <NavItem
+          active={isNotifs}
+          onClick={() => navigate({ to: "/notifications" })}
+          icon={<Bell className="h-4 w-4" />}
+          label="Notifications"
+        />
+
         <NavItem
           active={isMailActive}
           onClick={() => navigate({ to: "/mail" })}

@@ -17,10 +17,12 @@ import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSebiRouteImport } from './routes/_authenticated/sebi'
 import { Route as AuthenticatedPresentationsRouteImport } from './routes/_authenticated/presentations'
-import { Route as AuthenticatedMarketsRouteImport } from './routes/_authenticated/markets'
+import { Route as AuthenticatedNseRouteImport } from './routes/_authenticated/nse'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMailRouteImport } from './routes/_authenticated/mail'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCyberRouteImport } from './routes/_authenticated/cyber'
+import { Route as AuthenticatedCertInRouteImport } from './routes/_authenticated/cert-in'
 import { Route as ApiVoiceTtsRouteImport } from './routes/api/voice/tts'
 import { Route as ApiVoiceSttRouteImport } from './routes/api/voice/stt'
 import { Route as ApiGraphSendRouteImport } from './routes/api/graph/send'
@@ -28,6 +30,7 @@ import { Route as ApiGraphMessagesRouteImport } from './routes/api/graph/message
 import { Route as ApiGraphContactsRouteImport } from './routes/api/graph/contacts'
 import { Route as AuthenticatedVoiceConversationIdRouteImport } from './routes/_authenticated/voice.$conversationId'
 import { Route as AuthenticatedCyberArticleIdRouteImport } from './routes/_authenticated/cyber.$articleId'
+import { Route as ApiPublicSyncSourceRouteImport } from './routes/api/public/sync/$source'
 import { Route as ApiAuthMsStartRouteImport } from './routes/api/auth/ms/start'
 import { Route as ApiAuthMsCallbackRouteImport } from './routes/api/auth/ms/callback'
 
@@ -71,11 +74,17 @@ const AuthenticatedPresentationsRoute =
     path: '/presentations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMarketsRoute = AuthenticatedMarketsRouteImport.update({
-  id: '/markets',
-  path: '/markets',
+const AuthenticatedNseRoute = AuthenticatedNseRouteImport.update({
+  id: '/nse',
+  path: '/nse',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMailRoute = AuthenticatedMailRouteImport.update({
   id: '/mail',
   path: '/mail',
@@ -89,6 +98,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedCyberRoute = AuthenticatedCyberRouteImport.update({
   id: '/cyber',
   path: '/cyber',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCertInRoute = AuthenticatedCertInRouteImport.update({
+  id: '/cert-in',
+  path: '/cert-in',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiVoiceTtsRoute = ApiVoiceTtsRouteImport.update({
@@ -128,6 +142,11 @@ const AuthenticatedCyberArticleIdRoute =
     path: '/$articleId',
     getParentRoute: () => AuthenticatedCyberRoute,
   } as any)
+const ApiPublicSyncSourceRoute = ApiPublicSyncSourceRouteImport.update({
+  id: '/api/public/sync/$source',
+  path: '/api/public/sync/$source',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthMsStartRoute = ApiAuthMsStartRouteImport.update({
   id: '/api/auth/ms/start',
   path: '/api/auth/ms/start',
@@ -142,10 +161,12 @@ const ApiAuthMsCallbackRoute = ApiAuthMsCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cert-in': typeof AuthenticatedCertInRoute
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/mail': typeof AuthenticatedMailRoute
-  '/markets': typeof AuthenticatedMarketsRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/nse': typeof AuthenticatedNseRoute
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -160,14 +181,17 @@ export interface FileRoutesByFullPath {
   '/api/voice/tts': typeof ApiVoiceTtsRoute
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
+  '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cert-in': typeof AuthenticatedCertInRoute
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/mail': typeof AuthenticatedMailRoute
-  '/markets': typeof AuthenticatedMarketsRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/nse': typeof AuthenticatedNseRoute
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -182,16 +206,19 @@ export interface FileRoutesByTo {
   '/api/voice/tts': typeof ApiVoiceTtsRoute
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
+  '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/cert-in': typeof AuthenticatedCertInRoute
   '/_authenticated/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/mail': typeof AuthenticatedMailRoute
-  '/_authenticated/markets': typeof AuthenticatedMarketsRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/nse': typeof AuthenticatedNseRoute
   '/_authenticated/presentations': typeof AuthenticatedPresentationsRoute
   '/_authenticated/sebi': typeof AuthenticatedSebiRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -206,16 +233,19 @@ export interface FileRoutesById {
   '/api/voice/tts': typeof ApiVoiceTtsRoute
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
+  '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/cert-in'
     | '/cyber'
     | '/dashboard'
     | '/mail'
-    | '/markets'
+    | '/notifications'
+    | '/nse'
     | '/presentations'
     | '/sebi'
     | '/settings'
@@ -230,14 +260,17 @@ export interface FileRouteTypes {
     | '/api/voice/tts'
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
+    | '/api/public/sync/$source'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/cert-in'
     | '/cyber'
     | '/dashboard'
     | '/mail'
-    | '/markets'
+    | '/notifications'
+    | '/nse'
     | '/presentations'
     | '/sebi'
     | '/settings'
@@ -252,15 +285,18 @@ export interface FileRouteTypes {
     | '/api/voice/tts'
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
+    | '/api/public/sync/$source'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/cert-in'
     | '/_authenticated/cyber'
     | '/_authenticated/dashboard'
     | '/_authenticated/mail'
-    | '/_authenticated/markets'
+    | '/_authenticated/notifications'
+    | '/_authenticated/nse'
     | '/_authenticated/presentations'
     | '/_authenticated/sebi'
     | '/_authenticated/settings'
@@ -275,6 +311,7 @@ export interface FileRouteTypes {
     | '/api/voice/tts'
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
+    | '/api/public/sync/$source'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -289,6 +326,7 @@ export interface RootRouteChildren {
   ApiVoiceTtsRoute: typeof ApiVoiceTtsRoute
   ApiAuthMsCallbackRoute: typeof ApiAuthMsCallbackRoute
   ApiAuthMsStartRoute: typeof ApiAuthMsStartRoute
+  ApiPublicSyncSourceRoute: typeof ApiPublicSyncSourceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -349,11 +387,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPresentationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/markets': {
-      id: '/_authenticated/markets'
-      path: '/markets'
-      fullPath: '/markets'
-      preLoaderRoute: typeof AuthenticatedMarketsRouteImport
+    '/_authenticated/nse': {
+      id: '/_authenticated/nse'
+      path: '/nse'
+      fullPath: '/nse'
+      preLoaderRoute: typeof AuthenticatedNseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/mail': {
@@ -375,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/cyber'
       fullPath: '/cyber'
       preLoaderRoute: typeof AuthenticatedCyberRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cert-in': {
+      id: '/_authenticated/cert-in'
+      path: '/cert-in'
+      fullPath: '/cert-in'
+      preLoaderRoute: typeof AuthenticatedCertInRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/voice/tts': {
@@ -426,6 +478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCyberArticleIdRouteImport
       parentRoute: typeof AuthenticatedCyberRoute
     }
+    '/api/public/sync/$source': {
+      id: '/api/public/sync/$source'
+      path: '/api/public/sync/$source'
+      fullPath: '/api/public/sync/$source'
+      preLoaderRoute: typeof ApiPublicSyncSourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/ms/start': {
       id: '/api/auth/ms/start'
       path: '/api/auth/ms/start'
@@ -466,10 +525,12 @@ const AuthenticatedVoiceRouteWithChildren =
   AuthenticatedVoiceRoute._addFileChildren(AuthenticatedVoiceRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCertInRoute: typeof AuthenticatedCertInRoute
   AuthenticatedCyberRoute: typeof AuthenticatedCyberRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMailRoute: typeof AuthenticatedMailRoute
-  AuthenticatedMarketsRoute: typeof AuthenticatedMarketsRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedNseRoute: typeof AuthenticatedNseRoute
   AuthenticatedPresentationsRoute: typeof AuthenticatedPresentationsRoute
   AuthenticatedSebiRoute: typeof AuthenticatedSebiRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -477,10 +538,12 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCertInRoute: AuthenticatedCertInRoute,
   AuthenticatedCyberRoute: AuthenticatedCyberRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMailRoute: AuthenticatedMailRoute,
-  AuthenticatedMarketsRoute: AuthenticatedMarketsRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedNseRoute: AuthenticatedNseRoute,
   AuthenticatedPresentationsRoute: AuthenticatedPresentationsRoute,
   AuthenticatedSebiRoute: AuthenticatedSebiRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -502,17 +565,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiVoiceTtsRoute: ApiVoiceTtsRoute,
   ApiAuthMsCallbackRoute: ApiAuthMsCallbackRoute,
   ApiAuthMsStartRoute: ApiAuthMsStartRoute,
+  ApiPublicSyncSourceRoute: ApiPublicSyncSourceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
