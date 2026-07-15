@@ -78,10 +78,13 @@ export function Sidebar() {
   const isCyber = location.pathname.startsWith("/cyber");
   const isPresentations = location.pathname.startsWith("/presentations");
   const isSebi = location.pathname.startsWith("/sebi");
-  const isMarkets = location.pathname.startsWith("/markets");
+  const isCertIn = location.pathname.startsWith("/cert-in");
+  const isNse = location.pathname.startsWith("/nse");
+  const isNotifs = location.pathname.startsWith("/notifications");
   const isVoiceActive =
     location.pathname.startsWith("/voice") ||
-    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isMarkets);
+    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isCertIn && !isNse && !isNotifs);
+
 
   async function signOut() {
     await qc.cancelQueries();
