@@ -27,7 +27,8 @@ export type NseItem = {
   notice_datetime?: string | null;
   attachment_url?: string | null;
   external_url?: string | null;
-  raw?: Record<string, unknown> | null;
+  raw?: any;
+
 };
 
 export function adminClient() {
