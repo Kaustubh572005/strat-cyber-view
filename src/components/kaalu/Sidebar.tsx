@@ -27,8 +27,10 @@ import {
   ShieldAlert,
   Presentation,
   FileText,
-  TrendingUp,
+  Building2,
+  Bell,
 } from "lucide-react";
+
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
