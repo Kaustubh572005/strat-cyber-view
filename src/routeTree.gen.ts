@@ -20,6 +20,7 @@ import { Route as AuthenticatedPresentationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedMailRouteImport } from './routes/_authenticated/mail'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCyberRouteImport } from './routes/_authenticated/cyber'
+import { Route as AuthenticatedCertInRouteImport } from './routes/_authenticated/cert-in'
 import { Route as ApiVoiceTtsRouteImport } from './routes/api/voice/tts'
 import { Route as ApiVoiceSttRouteImport } from './routes/api/voice/stt'
 import { Route as ApiGraphSendRouteImport } from './routes/api/graph/send'
@@ -86,6 +87,11 @@ const AuthenticatedCyberRoute = AuthenticatedCyberRouteImport.update({
   path: '/cyber',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCertInRoute = AuthenticatedCertInRouteImport.update({
+  id: '/cert-in',
+  path: '/cert-in',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiVoiceTtsRoute = ApiVoiceTtsRouteImport.update({
   id: '/api/voice/tts',
   path: '/api/voice/tts',
@@ -142,6 +148,7 @@ const ApiAuthMsCallbackRoute = ApiAuthMsCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cert-in': typeof AuthenticatedCertInRoute
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/mail': typeof AuthenticatedMailRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cert-in': typeof AuthenticatedCertInRoute
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/mail': typeof AuthenticatedMailRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/cert-in': typeof AuthenticatedCertInRoute
   '/_authenticated/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/mail': typeof AuthenticatedMailRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/cert-in'
     | '/cyber'
     | '/dashboard'
     | '/mail'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/cert-in'
     | '/cyber'
     | '/dashboard'
     | '/mail'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/cert-in'
     | '/_authenticated/cyber'
     | '/_authenticated/dashboard'
     | '/_authenticated/mail'
@@ -371,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCyberRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cert-in': {
+      id: '/_authenticated/cert-in'
+      path: '/cert-in'
+      fullPath: '/cert-in'
+      preLoaderRoute: typeof AuthenticatedCertInRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/voice/tts': {
       id: '/api/voice/tts'
       path: '/api/voice/tts'
@@ -467,6 +486,7 @@ const AuthenticatedVoiceRouteWithChildren =
   AuthenticatedVoiceRoute._addFileChildren(AuthenticatedVoiceRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCertInRoute: typeof AuthenticatedCertInRoute
   AuthenticatedCyberRoute: typeof AuthenticatedCyberRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMailRoute: typeof AuthenticatedMailRoute
@@ -477,6 +497,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCertInRoute: AuthenticatedCertInRoute,
   AuthenticatedCyberRoute: AuthenticatedCyberRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMailRoute: AuthenticatedMailRoute,
