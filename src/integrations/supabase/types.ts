@@ -83,6 +83,68 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_articles: {
+        Row: {
+          ai_impact: string | null
+          ai_summary: string | null
+          attachment_url: string | null
+          category: string | null
+          created_at: string
+          external_id: string
+          id: string
+          published_at: string | null
+          publisher: string | null
+          raw: Json | null
+          severity: string | null
+          snippet: string | null
+          source_key: string
+          title: string
+          url: string
+        }
+        Insert: {
+          ai_impact?: string | null
+          ai_summary?: string | null
+          attachment_url?: string | null
+          category?: string | null
+          created_at?: string
+          external_id: string
+          id?: string
+          published_at?: string | null
+          publisher?: string | null
+          raw?: Json | null
+          severity?: string | null
+          snippet?: string | null
+          source_key: string
+          title: string
+          url: string
+        }
+        Update: {
+          ai_impact?: string | null
+          ai_summary?: string | null
+          attachment_url?: string | null
+          category?: string | null
+          created_at?: string
+          external_id?: string
+          id?: string
+          published_at?: string | null
+          publisher?: string | null
+          raw?: Json | null
+          severity?: string | null
+          snippet?: string | null
+          source_key?: string
+          title?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_articles_source_key_fkey"
+            columns: ["source_key"]
+            isOneToOne: false
+            referencedRelation: "feed_sources"
+            referencedColumns: ["source_key"]
+          },
+        ]
+      }
       feed_items: {
         Row: {
           ai_summary: string | null
@@ -122,6 +184,39 @@ export type Database = {
           severity?: string | null
           source?: string
           title?: string
+        }
+        Relationships: []
+      }
+      feed_sources: {
+        Row: {
+          category: string
+          display_name: string
+          last_added_count: number
+          last_error: string | null
+          last_status: string | null
+          last_synced_at: string | null
+          source_key: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          display_name: string
+          last_added_count?: number
+          last_error?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          source_key: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          display_name?: string
+          last_added_count?: number
+          last_error?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          source_key?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -205,6 +300,116 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_dismissals: {
+        Row: {
+          dismissed_at: string
+          notification_id: string
+          user_id: string
+        }
+        Insert: {
+          dismissed_at?: string
+          notification_id: string
+          user_id: string
+        }
+        Update: {
+          dismissed_at?: string
+          notification_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_dismissals_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          article_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          severity: string | null
+          source_key: string
+          title: string
+        }
+        Insert: {
+          article_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          severity?: string | null
+          source_key: string
+          title: string
+        }
+        Update: {
+          article_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          severity?: string | null
+          source_key?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      nse_disclosures: {
+        Row: {
+          ai_impact: string | null
+          ai_summary: string | null
+          attachment_url: string | null
+          company_name: string | null
+          created_at: string
+          details: string | null
+          external_id: string
+          external_url: string | null
+          id: string
+          incident_type: string | null
+          notice_datetime: string | null
+          raw: Json | null
+          subject: string | null
+          symbol: string | null
+        }
+        Insert: {
+          ai_impact?: string | null
+          ai_summary?: string | null
+          attachment_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          details?: string | null
+          external_id: string
+          external_url?: string | null
+          id?: string
+          incident_type?: string | null
+          notice_datetime?: string | null
+          raw?: Json | null
+          subject?: string | null
+          symbol?: string | null
+        }
+        Update: {
+          ai_impact?: string | null
+          ai_summary?: string | null
+          attachment_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          details?: string | null
+          external_id?: string
+          external_url?: string | null
+          id?: string
+          incident_type?: string | null
+          notice_datetime?: string | null
+          raw?: Json | null
+          subject?: string | null
+          symbol?: string | null
+        }
+        Relationships: []
+      }
       presentation_templates: {
         Row: {
           created_at: string
@@ -262,6 +467,36 @@ export type Database = {
           ms_display_name?: string | null
           ms_email?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sync_runs: {
+        Row: {
+          added_count: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          source_key: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          added_count?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          source_key: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          added_count?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          source_key?: string
+          started_at?: string
+          status?: string
         }
         Relationships: []
       }
