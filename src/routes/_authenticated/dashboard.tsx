@@ -44,8 +44,8 @@ function DashboardPage() {
     queryFn: () =>
       getArticles({
         data: {
-          source_keys: ["sebi-whats-new", "cert-in", "cyber-news", "ai-news"],
-          limit: 400,
+          source_keys: ["sebi-whats-new", "cert-in", "cyber-news", "ai-news", "uti-amc-cyber"],
+          limit: 500,
         },
       }),
     refetchInterval: POLL_MS,
