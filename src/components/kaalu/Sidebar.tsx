@@ -149,6 +149,12 @@ export function Sidebar() {
           label="NSE Cybersecurity"
         />
         <NavItem
+          active={isUti}
+          onClick={() => navigate({ to: "/uti-amc" })}
+          icon={<Shield className="h-4 w-4" />}
+          label="UTI AMC Cyber Watch"
+        />
+        <NavItem
           active={isNotifs}
           onClick={() => navigate({ to: "/notifications" })}
           icon={<Bell className="h-4 w-4" />}
