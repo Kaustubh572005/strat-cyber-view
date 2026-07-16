@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/voice'
+import { Route as AuthenticatedUtiAmcRouteImport } from './routes/_authenticated/uti-amc'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSebiRouteImport } from './routes/_authenticated/sebi'
 import { Route as AuthenticatedPresentationsRouteImport } from './routes/_authenticated/presentations'
@@ -66,6 +67,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
 const AuthenticatedVoiceRoute = AuthenticatedVoiceRouteImport.update({
   id: '/voice',
   path: '/voice',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUtiAmcRoute = AuthenticatedUtiAmcRouteImport.update({
+  id: '/uti-amc',
+  path: '/uti-amc',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/uti-amc': typeof AuthenticatedUtiAmcRoute
   '/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -236,6 +243,7 @@ export interface FileRoutesByTo {
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/uti-amc': typeof AuthenticatedUtiAmcRoute
   '/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/presentations': typeof AuthenticatedPresentationsRoute
   '/_authenticated/sebi': typeof AuthenticatedSebiRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/uti-amc': typeof AuthenticatedUtiAmcRoute
   '/_authenticated/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -300,6 +309,7 @@ export interface FileRouteTypes {
     | '/presentations'
     | '/sebi'
     | '/settings'
+    | '/uti-amc'
     | '/voice'
     | '/api/chat'
     | '/.lovable/oauth/consent'
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/presentations'
     | '/sebi'
     | '/settings'
+    | '/uti-amc'
     | '/voice'
     | '/api/chat'
     | '/.lovable/oauth/consent'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/_authenticated/presentations'
     | '/_authenticated/sebi'
     | '/_authenticated/settings'
+    | '/_authenticated/uti-amc'
     | '/_authenticated/voice'
     | '/api/chat'
     | '/.lovable/oauth/consent'
@@ -439,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/voice'
       fullPath: '/voice'
       preLoaderRoute: typeof AuthenticatedVoiceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/uti-amc': {
+      id: '/_authenticated/uti-amc'
+      path: '/uti-amc'
+      fullPath: '/uti-amc'
+      preLoaderRoute: typeof AuthenticatedUtiAmcRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -637,6 +656,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPresentationsRoute: typeof AuthenticatedPresentationsRoute
   AuthenticatedSebiRoute: typeof AuthenticatedSebiRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedUtiAmcRoute: typeof AuthenticatedUtiAmcRoute
   AuthenticatedVoiceRoute: typeof AuthenticatedVoiceRouteWithChildren
 }
 
@@ -650,6 +670,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPresentationsRoute: AuthenticatedPresentationsRoute,
   AuthenticatedSebiRoute: AuthenticatedSebiRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedUtiAmcRoute: AuthenticatedUtiAmcRoute,
   AuthenticatedVoiceRoute: AuthenticatedVoiceRouteWithChildren,
 }
 
