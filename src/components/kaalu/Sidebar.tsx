@@ -80,10 +80,11 @@ export function Sidebar() {
   const isSebi = location.pathname.startsWith("/sebi");
   const isCertIn = location.pathname.startsWith("/cert-in");
   const isNse = location.pathname.startsWith("/nse");
+  const isUti = location.pathname.startsWith("/uti-amc");
   const isNotifs = location.pathname.startsWith("/notifications");
   const isVoiceActive =
     location.pathname.startsWith("/voice") ||
-    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isCertIn && !isNse && !isNotifs);
+    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isCertIn && !isNse && !isUti && !isNotifs);
 
 
   async function signOut() {
