@@ -10,11 +10,15 @@ import { StarField } from "@/components/kaalu/StarField";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : "",
+  }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -22,11 +26,20 @@ function AuthPage() {
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const canSubmit = useMemo(() => email.trim().length > 3 && password.length >= 6, [email, password]);
 
+  const goNext = () => {
+    if (next) {
+      window.location.href = next;
+    } else {
+      navigate({ to: "/voice" });
+    }
+  };
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/voice" });
+      if (data.user) goNext();
     });
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function explainAuthError(errorMessage: string) {
     const normalized = errorMessage.toLowerCase();
@@ -60,7 +73,7 @@ function AuthPage() {
       toast.error(text);
       return;
     }
-    navigate({ to: "/voice" });
+    goNext();
   }
 
   async function signUp(event?: FormEvent<HTMLFormElement>) {
@@ -77,7 +90,7 @@ function AuthPage() {
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: next ? window.location.origin + next : window.location.origin,
         data: { display_name: name || email.trim().split("@")[0] },
       },
     });
@@ -97,7 +110,7 @@ function AuthPage() {
     const text = "Welcome, Sir. Setting things up…";
     setMessage({ type: "success", text });
     toast.success(text);
-    navigate({ to: "/voice" });
+    goNext();
   }
 
   return (
