@@ -44,8 +44,8 @@ function DashboardPage() {
     queryFn: () =>
       getArticles({
         data: {
-          source_keys: ["sebi-whats-new", "cert-in", "cyber-news", "ai-news"],
-          limit: 400,
+          source_keys: ["sebi-whats-new", "cert-in", "cyber-news", "ai-news", "uti-amc-cyber"],
+          limit: 500,
         },
       }),
     refetchInterval: POLL_MS,
@@ -77,6 +77,7 @@ function DashboardPage() {
   const aiNews = byKey("ai-news");
   const sebi = byKey("sebi-whats-new");
   const certIn = byKey("cert-in");
+  const uti = byKey("uti-amc-cyber");
   const nse = nseQ.data ?? [];
   const notifs = (notifQ.data ?? []).filter((n) => !n.dismissed);
 
@@ -217,6 +218,19 @@ function DashboardPage() {
       />
 
       <NseSection items={nse.slice(0, 8)} loading={nseQ.isLoading} isNew={isNew} />
+
+      <FeedSection
+        icon={ShieldAlert}
+        title="UTI AMC Cyber Watch"
+        subtitle="Cybersecurity intelligence mentioning UTI Asset Management Company"
+        viewAllTo="/uti-amc"
+        sourceKey="uti-amc-cyber"
+        items={uti.slice(0, 8)}
+        loading={feedQ.isLoading}
+        isNew={isNew}
+        renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="primary" showSeverity showCategory />}
+      />
+
 
       <FeedSection
         icon={Cpu}

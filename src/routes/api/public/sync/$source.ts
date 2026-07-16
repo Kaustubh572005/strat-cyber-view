@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { runSync, type SourceKey } from "@/lib/sync-runner.server";
 
-const VALID: SourceKey[] = ["sebi-whats-new", "cert-in", "nse-cyber", "cyber-news", "ai-news"];
+const VALID: SourceKey[] = ["sebi-whats-new", "cert-in", "nse-cyber", "cyber-news", "ai-news", "uti-amc-cyber"];
 
 async function handle(source: string) {
   if (!VALID.includes(source as SourceKey)) {
