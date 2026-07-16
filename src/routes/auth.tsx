@@ -30,7 +30,7 @@ function AuthPage() {
     if (next) {
       window.location.href = next;
     } else {
-      goNext();
+      navigate({ to: "/voice" });
     }
   };
 
