@@ -77,6 +77,7 @@ function DashboardPage() {
   const aiNews = byKey("ai-news");
   const sebi = byKey("sebi-whats-new");
   const certIn = byKey("cert-in");
+  const uti = byKey("uti-amc-cyber");
   const nse = nseQ.data ?? [];
   const notifs = (notifQ.data ?? []).filter((n) => !n.dismissed);
 
