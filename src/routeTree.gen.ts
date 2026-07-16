@@ -34,6 +34,7 @@ import { Route as ApiGraphContactsRouteImport } from './routes/api/graph/contact
 import { Route as AuthenticatedVoiceConversationIdRouteImport } from './routes/_authenticated/voice.$conversationId'
 import { Route as AuthenticatedCyberArticleIdRouteImport } from './routes/_authenticated/cyber.$articleId'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicSyncSourceRouteImport } from './routes/api/public/sync/$source'
 import { Route as ApiAuthMsStartRouteImport } from './routes/api/auth/ms/start'
 import { Route as ApiAuthMsCallbackRouteImport } from './routes/api/auth/ms/callback'
@@ -169,6 +170,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncSourceRoute = ApiPublicSyncSourceRouteImport.update({
   id: '/api/public/sync/$source',
   path: '/api/public/sync/$source',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
   '/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
   '/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
   '/_authenticated/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/voice'
     | '/api/chat'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/cyber/$articleId'
     | '/voice/$conversationId'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/voice'
     | '/api/chat'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/cyber/$articleId'
     | '/voice/$conversationId'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/voice'
     | '/api/chat'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/cyber/$articleId'
     | '/_authenticated/voice/$conversationId'
@@ -373,6 +385,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiGraphContactsRoute: typeof ApiGraphContactsRoute
   ApiGraphMessagesRoute: typeof ApiGraphMessagesRoute
@@ -561,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/$source': {
       id: '/api/public/sync/$source'
       path: '/api/public/sync/$source'
@@ -645,6 +665,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiGraphContactsRoute: ApiGraphContactsRoute,
   ApiGraphMessagesRoute: ApiGraphMessagesRoute,
