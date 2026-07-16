@@ -161,7 +161,15 @@ export const refreshSource = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        source_key: z.enum(["sebi-whats-new", "cert-in", "nse-cyber", "cyber-news", "ai-news", "all"]),
+        source_key: z.enum([
+          "sebi-whats-new",
+          "cert-in",
+          "nse-cyber",
+          "cyber-news",
+          "ai-news",
+          "uti-amc-cyber",
+          "all",
+        ]),
       })
       .parse(d),
   )
@@ -169,7 +177,7 @@ export const refreshSource = createServerFn({ method: "POST" })
     const { runSync } = await import("@/lib/sync-runner.server");
     const sources =
       data.source_key === "all"
-        ? (["sebi-whats-new", "cert-in", "nse-cyber", "cyber-news", "ai-news"] as const)
+        ? (["sebi-whats-new", "cert-in", "nse-cyber", "cyber-news", "ai-news", "uti-amc-cyber"] as const)
         : [data.source_key];
     const results: Array<{ source: string; added: number; total: number; error?: string }> = [];
     for (const s of sources) {
