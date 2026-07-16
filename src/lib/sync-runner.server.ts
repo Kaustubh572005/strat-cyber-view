@@ -205,35 +205,173 @@ async function scrapeSebi(): Promise<NormalizedItem[]> {
 
 // ---------------- CERT-In ----------------
 
-async function scrapeCertIn(): Promise<NormalizedItem[]> {
-  // Primary: official RSS (advisory-focused)
-  try {
-    const raw = await fetchRss("https://www.cert-in.org.in/RSS/latestnews.xml");
-    if (raw.length > 0) {
-      return raw
-        .slice(0, 50)
-        .map((it) => normalizeRssItem(it, "CERT-In"))
-        .filter((x): x is NormalizedItem => !!x)
-        .map((it) => ({
-          ...it,
-          severity: detectSeverity(`${it.title} ${it.snippet}`),
-          category: "Advisory",
-        }));
-    }
-  } catch (e) {
-    console.error("[sync cert-in] rss failed", (e as Error).message);
+// Parse CERT-In advisory listing HTML — table rows contain advisory number,
+// title, and date. Format: CIVN-YYYY-NNNN or CIAD-YYYY-NNNN.
+function parseCertInHtml(html: string): NormalizedItem[] {
+  const items: NormalizedItem[] = [];
+  const idRe = /(CI(?:VN|AD)-\d{4}-\d{4,5})/g;
+  const seen = new Set<string>();
+  // Try anchor-based: <a href="...VLCODE=CIVN-2026-0001">Title</a>
+  const anchorRe =
+    /<a[^>]+href="([^"]*VLCODE=(CI(?:VN|AD)-\d{4}-\d{4,5}))[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = anchorRe.exec(html)) !== null) {
+    const hrefRaw = m[1];
+    const advId = m[2];
+    if (seen.has(advId)) continue;
+    seen.add(advId);
+    const title = stripHtml(m[3]).slice(0, 400);
+    const url = hrefRaw.startsWith("http")
+      ? hrefRaw
+      : `https://www.cert-in.org.in/${hrefRaw.replace(/^\//, "")}`;
+    if (!title) continue;
+    items.push({
+      external_id: advId,
+      title: `${advId}: ${title}`,
+      url,
+      publisher: "CERT-In",
+      category: advId.startsWith("CIAD") ? "Advisory" : "Vulnerability Note",
+      severity: detectSeverity(title),
+      snippet: title,
+    });
   }
-  // Fallback: Google News proxy
+  // Fallback: scan for advisory IDs in raw text if anchor regex missed
+  if (items.length === 0) {
+    while ((m = idRe.exec(html)) !== null) {
+      const advId = m[1];
+      if (seen.has(advId)) continue;
+      seen.add(advId);
+      items.push({
+        external_id: advId,
+        title: advId,
+        url: `https://www.cert-in.org.in/s2cMainServlet?pageid=PUBVLNOTES02&VLCODE=${advId}`,
+        publisher: "CERT-In",
+        category: advId.startsWith("CIAD") ? "Advisory" : "Vulnerability Note",
+        severity: "medium",
+        snippet: advId,
+      });
+    }
+  }
+  return items;
+}
+
+async function fetchCertInPage(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return null;
+    return await res.text();
+  } catch (e) {
+    console.warn("[sync cert-in] fetch fail", url, (e as Error).message);
+    return null;
+  }
+}
+
+async function scrapeCertIn(): Promise<NormalizedItem[]> {
+  // Strategy 1: official CERT-In advisories + vulnerability notes listings
+  const officialUrls = [
+    "https://www.cert-in.org.in/s2cMainServlet?pageid=PUBVLNOTES01",
+    "https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST",
+  ];
+  const officialItems: NormalizedItem[] = [];
+  for (const url of officialUrls) {
+    const html = await fetchCertInPage(url);
+    if (html) {
+      const parsed = parseCertInHtml(html);
+      officialItems.push(...parsed);
+    }
+  }
+
+  // Strategy 2: Google News restricted to cert-in.org.in domain (real advisories only)
+  let googleItems: NormalizedItem[] = [];
   try {
     const raw = await fetchRss(
-      "https://news.google.com/rss/search?q=CERT-In+advisory+OR+vulnerability&hl=en-IN&gl=IN&ceid=IN:en",
+      "https://news.google.com/rss/search?q=site:cert-in.org.in+advisory+OR+vulnerability&hl=en-IN&gl=IN&ceid=IN:en",
+    );
+    googleItems = raw
+      .slice(0, 100)
+      .map((it) => normalizeRssItem(it, "CERT-In"))
+      .filter((x): x is NormalizedItem => !!x)
+      .map((it) => {
+        const idMatch = /(CI(?:VN|AD)-\d{4}-\d{4,5})/.exec(`${it.title} ${it.snippet ?? ""}`);
+        return {
+          ...it,
+          external_id: idMatch ? idMatch[1] : it.external_id,
+          severity: detectSeverity(`${it.title} ${it.snippet}`),
+          category: idMatch?.[1]?.startsWith("CIAD") ? "Advisory" : "Vulnerability Note",
+        };
+      });
+  } catch (e) {
+    console.warn("[sync cert-in] google news fail", (e as Error).message);
+  }
+
+  // Strategy 3: broader CERT-In coverage (Indian security publications)
+  let broadItems: NormalizedItem[] = [];
+  try {
+    const raw = await fetchRss(
+      'https://news.google.com/rss/search?q=%22CERT-In%22+(advisory+OR+vulnerability+OR+alert+OR+warning)&hl=en-IN&gl=IN&ceid=IN:en',
+    );
+    broadItems = raw
+      .slice(0, 50)
+      .map((it) => normalizeRssItem(it, "CERT-In (news)"))
+      .filter((x): x is NormalizedItem => !!x)
+      .map((it) => ({
+        ...it,
+        severity: detectSeverity(`${it.title} ${it.snippet}`),
+        category: "Advisory",
+      }));
+  } catch {
+    /* ignore */
+  }
+
+  // Merge, dedup by external_id (prefer official > google > broad)
+  const map = new Map<string, NormalizedItem>();
+  for (const it of [...officialItems, ...googleItems, ...broadItems]) {
+    if (!map.has(it.external_id)) map.set(it.external_id, it);
+  }
+  return Array.from(map.values());
+}
+
+// ---------------- UTI AMC Cyber Watch ----------------
+
+const UTI_QUERY = encodeURIComponent(
+  '"UTI Asset Management" OR "UTI AMC" OR "UTI Mutual Fund" (cybersecurity OR "cyber attack" OR "cyber incident" OR "data breach" OR vulnerability OR "CERT-In" OR ransomware OR malware OR phishing OR "security incident" OR "information security" OR "security advisory" OR "threat intelligence")',
+);
+
+function classifyUtiIncident(text: string): string {
+  const t = text.toLowerCase();
+  if (/data breach|breach|leak/.test(t)) return "Data Breach";
+  if (/vulnerab|cve-|patch|zero[- ]day/.test(t)) return "Vulnerability";
+  if (/advisory|alert|warning/.test(t)) return "Advisory";
+  if (/regulator|sebi|disclosure|circular/.test(t)) return "Regulatory Disclosure";
+  if (/threat intelligence|apt|attribution|threat actor/.test(t)) return "Threat Intelligence";
+  return "News";
+}
+
+async function scrapeUtiAmcCyber(): Promise<NormalizedItem[]> {
+  try {
+    const raw = await fetchRss(
+      `https://news.google.com/rss/search?q=${UTI_QUERY}&hl=en-IN&gl=IN&ceid=IN:en`,
     );
     return raw
-      .slice(0, 40)
-      .map((it) => normalizeRssItem(it, "CERT-In (Google News)"))
+      .slice(0, 100)
+      .map((it) => normalizeRssItem(it, "News"))
       .filter((x): x is NormalizedItem => !!x)
-      .map((it) => ({ ...it, severity: detectSeverity(it.title), category: "Advisory" }));
-  } catch {
+      .filter((it) => /uti/i.test(`${it.title} ${it.snippet ?? ""}`))
+      .map((it) => ({
+        ...it,
+        severity: detectSeverity(`${it.title} ${it.snippet}`),
+        category: classifyUtiIncident(`${it.title} ${it.snippet}`),
+      }));
+  } catch (e) {
+    console.error("[sync uti-amc-cyber] fail", (e as Error).message);
     return [];
   }
 }
