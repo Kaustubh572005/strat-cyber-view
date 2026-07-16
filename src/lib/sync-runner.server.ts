@@ -480,7 +480,13 @@ function classifyIncident(text: string): string {
 
 // ---------------- Runner ----------------
 
-export type SourceKey = "sebi-whats-new" | "cert-in" | "nse-cyber" | "cyber-news" | "ai-news";
+export type SourceKey =
+  | "sebi-whats-new"
+  | "cert-in"
+  | "nse-cyber"
+  | "cyber-news"
+  | "ai-news"
+  | "uti-amc-cyber";
 
 export async function runSync(sourceKey: SourceKey): Promise<{ added: number; total: number }> {
   const supa = adminClient();
@@ -524,6 +530,7 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
       else if (sourceKey === "cert-in") items = await scrapeCertIn();
       else if (sourceKey === "cyber-news") items = await scrapeCyberNews();
       else if (sourceKey === "ai-news") items = await scrapeAiNews();
+      else if (sourceKey === "uti-amc-cyber") items = await scrapeUtiAmcCyber();
       total = items.length;
 
       // Batch upsert with dedup
