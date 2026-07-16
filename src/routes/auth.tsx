@@ -30,7 +30,7 @@ function AuthPage() {
     if (next) {
       window.location.href = next;
     } else {
-      navigate({ to: "/voice" });
+      goNext();
     }
   };
 
@@ -73,7 +73,7 @@ function AuthPage() {
       toast.error(text);
       return;
     }
-    navigate({ to: "/voice" });
+    goNext();
   }
 
   async function signUp(event?: FormEvent<HTMLFormElement>) {
@@ -90,7 +90,7 @@ function AuthPage() {
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: next ? window.location.origin + next : window.location.origin,
         data: { display_name: name || email.trim().split("@")[0] },
       },
     });
@@ -110,7 +110,7 @@ function AuthPage() {
     const text = "Welcome, Sir. Setting things up…";
     setMessage({ type: "success", text });
     toast.success(text);
-    navigate({ to: "/voice" });
+    goNext();
   }
 
   return (
