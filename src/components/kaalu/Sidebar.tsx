@@ -25,6 +25,7 @@ import {
   LayoutDashboard,
   Package,
   ShieldAlert,
+  Shield,
   Presentation,
   FileText,
   Building2,
