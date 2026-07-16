@@ -220,6 +220,19 @@ function DashboardPage() {
       <NseSection items={nse.slice(0, 8)} loading={nseQ.isLoading} isNew={isNew} />
 
       <FeedSection
+        icon={ShieldAlert}
+        title="UTI AMC Cyber Watch"
+        subtitle="Cybersecurity intelligence mentioning UTI Asset Management Company"
+        viewAllTo="/uti-amc"
+        sourceKey="uti-amc-cyber"
+        items={uti.slice(0, 8)}
+        loading={feedQ.isLoading}
+        isNew={isNew}
+        renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="primary" showSeverity showCategory />}
+      />
+
+
+      <FeedSection
         icon={Cpu}
         title="AI & Emerging Technology"
         subtitle="AI advances and their security implications"
