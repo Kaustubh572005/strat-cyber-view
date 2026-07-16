@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,8 @@ import { Route as AuthenticatedMailRouteImport } from './routes/_authenticated/m
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCyberRouteImport } from './routes/_authenticated/cyber'
 import { Route as AuthenticatedCertInRouteImport } from './routes/_authenticated/cert-in'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ApiVoiceTtsRouteImport } from './routes/api/voice/tts'
 import { Route as ApiVoiceSttRouteImport } from './routes/api/voice/stt'
 import { Route as ApiGraphSendRouteImport } from './routes/api/graph/send'
@@ -30,10 +33,16 @@ import { Route as ApiGraphMessagesRouteImport } from './routes/api/graph/message
 import { Route as ApiGraphContactsRouteImport } from './routes/api/graph/contacts'
 import { Route as AuthenticatedVoiceConversationIdRouteImport } from './routes/_authenticated/voice.$conversationId'
 import { Route as AuthenticatedCyberArticleIdRouteImport } from './routes/_authenticated/cyber.$articleId'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as ApiPublicSyncSourceRouteImport } from './routes/api/public/sync/$source'
 import { Route as ApiAuthMsStartRouteImport } from './routes/api/auth/ms/start'
 import { Route as ApiAuthMsCallbackRouteImport } from './routes/api/auth/ms/callback'
 
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -105,6 +114,18 @@ const AuthenticatedCertInRoute = AuthenticatedCertInRouteImport.update({
   path: '/cert-in',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiVoiceTtsRoute = ApiVoiceTtsRouteImport.update({
   id: '/api/voice/tts',
   path: '/api/voice/tts',
@@ -142,6 +163,12 @@ const AuthenticatedCyberArticleIdRoute =
     path: '/$articleId',
     getParentRoute: () => AuthenticatedCyberRoute,
   } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSyncSourceRoute = ApiPublicSyncSourceRouteImport.update({
   id: '/api/public/sync/$source',
   path: '/api/public/sync/$source',
@@ -161,6 +188,9 @@ const ApiAuthMsCallbackRoute = ApiAuthMsCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/cert-in': typeof AuthenticatedCertInRoute
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -172,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
   '/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
   '/api/graph/contacts': typeof ApiGraphContactsRoute
@@ -186,6 +217,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/cert-in': typeof AuthenticatedCertInRoute
   '/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -197,6 +231,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
   '/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
   '/api/graph/contacts': typeof ApiGraphContactsRoute
@@ -213,6 +248,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/cert-in': typeof AuthenticatedCertInRoute
   '/_authenticated/cyber': typeof AuthenticatedCyberRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -224,6 +262,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/voice': typeof AuthenticatedVoiceRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/cyber/$articleId': typeof AuthenticatedCyberArticleIdRoute
   '/_authenticated/voice/$conversationId': typeof AuthenticatedVoiceConversationIdRoute
   '/api/graph/contacts': typeof ApiGraphContactsRoute
@@ -240,6 +279,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/cert-in'
     | '/cyber'
     | '/dashboard'
@@ -251,6 +293,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/voice'
     | '/api/chat'
+    | '/.mcp/invoke-tool/$tool'
     | '/cyber/$articleId'
     | '/voice/$conversationId'
     | '/api/graph/contacts'
@@ -265,6 +308,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/cert-in'
     | '/cyber'
     | '/dashboard'
@@ -276,6 +322,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/voice'
     | '/api/chat'
+    | '/.mcp/invoke-tool/$tool'
     | '/cyber/$articleId'
     | '/voice/$conversationId'
     | '/api/graph/contacts'
@@ -291,6 +338,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/mcp'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/cert-in'
     | '/_authenticated/cyber'
     | '/_authenticated/dashboard'
@@ -302,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/voice'
     | '/api/chat'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/cyber/$articleId'
     | '/_authenticated/voice/$conversationId'
     | '/api/graph/contacts'
@@ -318,7 +369,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  McpRoute: typeof McpRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiGraphContactsRoute: typeof ApiGraphContactsRoute
   ApiGraphMessagesRoute: typeof ApiGraphMessagesRoute
   ApiGraphSendRoute: typeof ApiGraphSendRoute
@@ -331,6 +386,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -429,6 +491,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCertInRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/voice/tts': {
       id: '/api/voice/tts'
       path: '/api/voice/tts'
@@ -477,6 +553,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cyber/$articleId'
       preLoaderRoute: typeof AuthenticatedCyberArticleIdRouteImport
       parentRoute: typeof AuthenticatedCyberRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/sync/$source': {
       id: '/api/public/sync/$source'
@@ -557,7 +640,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  McpRoute: McpRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiGraphContactsRoute: ApiGraphContactsRoute,
   ApiGraphMessagesRoute: ApiGraphMessagesRoute,
   ApiGraphSendRoute: ApiGraphSendRoute,
