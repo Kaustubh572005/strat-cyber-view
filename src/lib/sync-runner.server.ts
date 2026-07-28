@@ -156,7 +156,13 @@ async function scrapeAiNews(): Promise<NormalizedItem[]> {
   return results.flat();
 }
 
-// ---------------- SEBI ----------------
+// ---------------- SEBI Circular Repository (official only) ----------------
+//
+// Source of truth: https://www.sebi.gov.in/  (Legal → Circulars listing)
+// Rule: ONLY records whose Type = "Circulars" are stored. No RSS, no Google
+// News, no third-party feeds. If the official listing is unreachable we
+// return [] and let the caller surface "Official source temporarily
+// unavailable." — we never silently substitute other content.
 
 function classifySebi(title: string): string {
   const t = title.toLowerCase();
@@ -169,54 +175,101 @@ function classifySebi(title: string): string {
   return "General";
 }
 
-async function scrapeSebi(): Promise<NormalizedItem[]> {
-  // Primary: official SEBI RSS
+async function fetchHtml(url: string, referer?: string): Promise<string | null> {
   try {
-    const raw = await fetchRss("https://www.sebi.gov.in/sebirss.xml");
-    if (raw.length > 0) {
-      return raw
-        .slice(0, 60)
-        .map((it) => normalizeRssItem(it, "SEBI"))
-        .filter((x): x is NormalizedItem => !!x)
-        .map((it) => ({
-          ...it,
-          category: classifySebi(it.title),
-          attachment_url: it.url.endsWith(".pdf") ? it.url : null,
-        }));
-    }
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        ...(referer ? { Referer: referer } : {}),
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    return await res.text();
   } catch (e) {
-    console.error("[sync sebi] official rss failed", (e as Error).message);
-  }
-  // Fallback: Google News proxy
-  try {
-    const raw = await fetchRss(
-      "https://news.google.com/rss/search?q=SEBI+circular+OR+SEBI+notification+OR+SEBI+what's+new&hl=en-IN&gl=IN&ceid=IN:en",
-    );
-    return raw
-      .slice(0, 50)
-      .map((it) => normalizeRssItem(it, "SEBI (Google News)"))
-      .filter((x): x is NormalizedItem => !!x)
-      .map((it) => ({ ...it, category: classifySebi(it.title) }));
-  } catch (e) {
-    console.error("[sync sebi] fallback failed", (e as Error).message);
-    return [];
+    console.warn("[sync] fetch fail", url, (e as Error).message);
+    return null;
   }
 }
 
-// ---------------- CERT-In ----------------
+// Parse SEBI Circulars listing HTML. Only anchors that point to canonical
+// SEBI circular paths are accepted — this is the SEBI "Type = Circulars"
+// filter enforced at parse time.
+function parseSebiCirculars(html: string): NormalizedItem[] {
+  const items: NormalizedItem[] = [];
+  const seen = new Set<string>();
+  const anchorRe =
+    /<a[^>]+href="((?:\/sebi_data\/attachdocs|\/legal\/circulars|\/web\/[^"]*circular)[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = anchorRe.exec(html)) !== null) {
+    const href = m[1];
+    const title = stripHtml(m[2]).slice(0, 400);
+    if (!title || title.length < 8) continue;
+    const url = href.startsWith("http") ? href : `https://www.sebi.gov.in${href}`;
+    if (seen.has(url)) continue;
+    seen.add(url);
+    const tail = html.slice(m.index, m.index + 500);
+    const dateMatch =
+      /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*,?\s+(\d{4})/i.exec(tail);
+    let published_at: string | null = null;
+    if (dateMatch) {
+      const d = new Date(`${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}`);
+      if (!isNaN(d.getTime())) published_at = d.toISOString();
+    }
+    const numMatch = /(SEBI\/HO\/[A-Z0-9_\-/]+\/\d{4}\/\d+|CIR\/[A-Z0-9_\-/]+\/\d+)/i.exec(
+      `${title} ${tail}`,
+    );
+    items.push({
+      external_id: hash(`sebi:${url}`),
+      title,
+      url,
+      publisher: "SEBI",
+      category: classifySebi(title),
+      published_at,
+      snippet: numMatch ? `Circular No. ${numMatch[1]}` : null,
+      attachment_url: url.toLowerCase().endsWith(".pdf") ? url : null,
+    });
+  }
+  return items;
+}
 
-// Parse CERT-In advisory listing HTML — table rows contain advisory number,
-// title, and date. Format: CIVN-YYYY-NNNN or CIAD-YYYY-NNNN.
+async function scrapeSebi(): Promise<NormalizedItem[]> {
+  // Official SEBI Circulars listing. sid=1 (Legal) ssid=6 (Circulars).
+  const listingUrls = [
+    "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=6&smid=0",
+    "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=6&smid=0&page=2",
+    "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=6&smid=0&page=3",
+  ];
+  const all: NormalizedItem[] = [];
+  for (const url of listingUrls) {
+    const html = await fetchHtml(url, "https://www.sebi.gov.in/");
+    if (!html) continue;
+    all.push(...parseSebiCirculars(html));
+  }
+  const map = new Map<string, NormalizedItem>();
+  for (const it of all) if (!map.has(it.url)) map.set(it.url, it);
+  return Array.from(map.values());
+}
+
+// ---------------- CERT-In Advisory Repository (official only) ----------------
+//
+// Source of truth: https://www.cert-in.org.in/
+// Flow: Advisories → Advisories of the Year → <year>
+//   https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year=<year>
+// Rule: ONLY the official CERT-In advisory listing. No RSS, no Google News,
+// no third-party sources.
+
 function parseCertInHtml(html: string): NormalizedItem[] {
   const items: NormalizedItem[] = [];
-  const idRe = /(CI(?:VN|AD)-\d{4}-\d{4,5})/g;
   const seen = new Set<string>();
-  // Try anchor-based: <a href="...VLCODE=CIVN-2026-0001">Title</a>
   const anchorRe =
     /<a[^>]+href="([^"]*VLCODE=(CI(?:VN|AD)-\d{4}-\d{4,5}))[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   while ((m = anchorRe.exec(html)) !== null) {
-    const hrefRaw = m[1];
+    const hrefRaw = m[1].replace(/&amp;/g, "&");
     const advId = m[2];
     if (seen.has(advId)) continue;
     seen.add(advId);
@@ -225,6 +278,16 @@ function parseCertInHtml(html: string): NormalizedItem[] {
       ? hrefRaw
       : `https://www.cert-in.org.in/${hrefRaw.replace(/^\//, "")}`;
     if (!title) continue;
+    const tail = html.slice(m.index, m.index + 600);
+    const dateMatch =
+      /(\d{1,2})[-\s/](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-\s/](\d{4})/i.exec(
+        tail,
+      );
+    let published_at: string | null = null;
+    if (dateMatch) {
+      const d = new Date(`${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}`);
+      if (!isNaN(d.getTime())) published_at = d.toISOString();
+    }
     items.push({
       external_id: advId,
       title: `${advId}: ${title}`,
@@ -233,109 +296,24 @@ function parseCertInHtml(html: string): NormalizedItem[] {
       category: advId.startsWith("CIAD") ? "Advisory" : "Vulnerability Note",
       severity: detectSeverity(title),
       snippet: title,
+      published_at,
     });
-  }
-  // Fallback: scan for advisory IDs in raw text if anchor regex missed
-  if (items.length === 0) {
-    while ((m = idRe.exec(html)) !== null) {
-      const advId = m[1];
-      if (seen.has(advId)) continue;
-      seen.add(advId);
-      items.push({
-        external_id: advId,
-        title: advId,
-        url: `https://www.cert-in.org.in/s2cMainServlet?pageid=PUBVLNOTES02&VLCODE=${advId}`,
-        publisher: "CERT-In",
-        category: advId.startsWith("CIAD") ? "Advisory" : "Vulnerability Note",
-        severity: "medium",
-        snippet: advId,
-      });
-    }
   }
   return items;
 }
 
-async function fetchCertInPage(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!res.ok) return null;
-    return await res.text();
-  } catch (e) {
-    console.warn("[sync cert-in] fetch fail", url, (e as Error).message);
-    return null;
-  }
-}
-
 async function scrapeCertIn(): Promise<NormalizedItem[]> {
-  // Strategy 1: official CERT-In advisories + vulnerability notes listings
-  const officialUrls = [
-    "https://www.cert-in.org.in/s2cMainServlet?pageid=PUBVLNOTES01",
-    "https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST",
-  ];
-  const officialItems: NormalizedItem[] = [];
-  for (const url of officialUrls) {
-    const html = await fetchCertInPage(url);
-    if (html) {
-      const parsed = parseCertInHtml(html);
-      officialItems.push(...parsed);
-    }
+  const currentYear = new Date().getUTCFullYear();
+  const years = [currentYear, currentYear - 1, currentYear - 2];
+  const items: NormalizedItem[] = [];
+  for (const year of years) {
+    const url = `https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year=${year}`;
+    const html = await fetchHtml(url, "https://www.cert-in.org.in/");
+    if (!html) continue;
+    items.push(...parseCertInHtml(html));
   }
-
-  // Strategy 2: Google News restricted to cert-in.org.in domain (real advisories only)
-  let googleItems: NormalizedItem[] = [];
-  try {
-    const raw = await fetchRss(
-      "https://news.google.com/rss/search?q=site:cert-in.org.in+advisory+OR+vulnerability&hl=en-IN&gl=IN&ceid=IN:en",
-    );
-    googleItems = raw
-      .slice(0, 100)
-      .map((it) => normalizeRssItem(it, "CERT-In"))
-      .filter((x): x is NormalizedItem => !!x)
-      .map((it) => {
-        const idMatch = /(CI(?:VN|AD)-\d{4}-\d{4,5})/.exec(`${it.title} ${it.snippet ?? ""}`);
-        return {
-          ...it,
-          external_id: idMatch ? idMatch[1] : it.external_id,
-          severity: detectSeverity(`${it.title} ${it.snippet}`),
-          category: idMatch?.[1]?.startsWith("CIAD") ? "Advisory" : "Vulnerability Note",
-        };
-      });
-  } catch (e) {
-    console.warn("[sync cert-in] google news fail", (e as Error).message);
-  }
-
-  // Strategy 3: broader CERT-In coverage (Indian security publications)
-  let broadItems: NormalizedItem[] = [];
-  try {
-    const raw = await fetchRss(
-      'https://news.google.com/rss/search?q=%22CERT-In%22+(advisory+OR+vulnerability+OR+alert+OR+warning)&hl=en-IN&gl=IN&ceid=IN:en',
-    );
-    broadItems = raw
-      .slice(0, 50)
-      .map((it) => normalizeRssItem(it, "CERT-In (news)"))
-      .filter((x): x is NormalizedItem => !!x)
-      .map((it) => ({
-        ...it,
-        severity: detectSeverity(`${it.title} ${it.snippet}`),
-        category: "Advisory",
-      }));
-  } catch {
-    /* ignore */
-  }
-
-  // Merge, dedup by external_id (prefer official > google > broad)
   const map = new Map<string, NormalizedItem>();
-  for (const it of [...officialItems, ...googleItems, ...broadItems]) {
-    if (!map.has(it.external_id)) map.set(it.external_id, it);
-  }
+  for (const it of items) if (!map.has(it.external_id)) map.set(it.external_id, it);
   return Array.from(map.values());
 }
 
