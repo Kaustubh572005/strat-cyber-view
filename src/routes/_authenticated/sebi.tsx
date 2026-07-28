@@ -52,14 +52,16 @@ function SebiPage() {
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">SEBI</div>
-          <h1 className="text-3xl font-semibold neon-text mt-1">SEBI What's New</h1>
+          <h1 className="text-3xl font-semibold neon-text mt-1">SEBI Circular Repository</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Permanent repository of every SEBI What's New item. Sourced from{" "}
-            <a href="https://www.sebi.gov.in/sebirss.xml" target="_blank" rel="noreferrer" className="underline">
+            Permanent repository of official SEBI Circulars only. Sourced directly from{" "}
+            <a href="https://www.sebi.gov.in/" target="_blank" rel="noreferrer" className="underline">
               sebi.gov.in
             </a>
-            . Auto-refreshes every 5 minutes; new items are appended, never replaced.
+            . Press releases, orders, speeches and news are excluded. Auto-refreshes hourly; new
+            circulars are appended and never removed.
           </p>
+
         </div>
         <button
           onClick={() => mut.mutate()}
