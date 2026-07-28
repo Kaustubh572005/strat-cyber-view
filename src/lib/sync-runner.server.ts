@@ -175,19 +175,34 @@ function classifySebi(title: string): string {
   return "General";
 }
 
-async function fetchHtml(url: string, referer?: string): Promise<string | null> {
+async function fetchHtml(
+  url: string,
+  referer?: string,
+  init?: { method?: string; body?: string; extraHeaders?: Record<string, string>; timeoutMs?: number },
+): Promise<string | null> {
+  const timeout = init?.timeoutMs ?? 20000;
+  const method = init?.method ?? "GET";
   try {
     const res = await fetch(url, {
+      method,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
         ...(referer ? { Referer: referer } : {}),
+        ...(method === "POST"
+          ? { "Content-Type": "application/x-www-form-urlencoded", "X-Requested-With": "XMLHttpRequest" }
+          : {}),
+        ...(init?.extraHeaders ?? {}),
       },
-      signal: AbortSignal.timeout(15000),
+      body: init?.body,
+      signal: AbortSignal.timeout(timeout),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn("[sync] fetch non-ok", res.status, url);
+      return null;
+    }
     return await res.text();
   } catch (e) {
     console.warn("[sync] fetch fail", url, (e as Error).message);
@@ -195,33 +210,38 @@ async function fetchHtml(url: string, referer?: string): Promise<string | null> 
   }
 }
 
-// Parse SEBI Circulars listing HTML. Only anchors that point to canonical
-// SEBI circular paths are accepted — this is the SEBI "Type = Circulars"
-// filter enforced at parse time.
+// Parse SEBI Circulars listing HTML/fragment. Extracts rows with date + title
+// link to a canonical SEBI circulars URL. Works on both the full listing
+// page (ssid=7) and the AJAX fragment returned by getnewslistinfo.jsp.
 function parseSebiCirculars(html: string): NormalizedItem[] {
   const items: NormalizedItem[] = [];
   const seen = new Set<string>();
-  const anchorRe =
-    /<a[^>]+href="((?:\/sebi_data\/attachdocs|\/legal\/circulars|\/web\/[^"]*circular)[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = anchorRe.exec(html)) !== null) {
-    const href = m[1];
-    const title = stripHtml(m[2]).slice(0, 400);
-    if (!title || title.length < 8) continue;
-    const url = href.startsWith("http") ? href : `https://www.sebi.gov.in${href}`;
+  const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let r: RegExpExecArray | null;
+  while ((r = rowRe.exec(html)) !== null) {
+    const row = r[1];
+    // First <td> should be a date like "Jul 23, 2026"
+    const tdMatches = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    if (tdMatches.length < 2) continue;
+    const dateText = stripHtml(tdMatches[0][1]);
+    const dateMatch = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),\s+(\d{4})$/i.exec(
+      dateText,
+    );
+    if (!dateMatch) continue;
+    // The link cell is the last <td> in Circulars listing
+    const linkCell = tdMatches[tdMatches.length - 1][1];
+    const a = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(linkCell);
+    if (!a) continue;
+    const href = a[1];
+    if (!/sebi\.gov\.in|^\/(?:legal|sebi_data|web)/i.test(href)) continue;
+    const title = stripHtml(a[2]).slice(0, 500);
+    if (!title || title.length < 6) continue;
+    const url = href.startsWith("http") ? href : `https://www.sebi.gov.in${href.startsWith("/") ? "" : "/"}${href}`;
     if (seen.has(url)) continue;
     seen.add(url);
-    const tail = html.slice(m.index, m.index + 500);
-    const dateMatch =
-      /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*,?\s+(\d{4})/i.exec(tail);
-    let published_at: string | null = null;
-    if (dateMatch) {
-      const d = new Date(`${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}`);
-      if (!isNaN(d.getTime())) published_at = d.toISOString();
-    }
-    const numMatch = /(SEBI\/HO\/[A-Z0-9_\-/]+\/\d{4}\/\d+|CIR\/[A-Z0-9_\-/]+\/\d+)/i.exec(
-      `${title} ${tail}`,
-    );
+    const d = new Date(`${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}`);
+    const published_at = isNaN(d.getTime()) ? null : d.toISOString();
+    const numMatch = /(SEBI\/HO\/[A-Z0-9_\-/]+\/\d{4}\/\d+|CIR\/[A-Z0-9_\-/]+\/\d+)/i.exec(title);
     items.push({
       external_id: hash(`sebi:${url}`),
       title,
@@ -237,18 +257,38 @@ function parseSebiCirculars(html: string): NormalizedItem[] {
 }
 
 async function scrapeSebi(): Promise<NormalizedItem[]> {
-  // Official SEBI Circulars listing. sid=1 (Legal) ssid=6 (Circulars).
-  const listingUrls = [
-    "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=6&smid=0",
-    "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=6&smid=0&page=2",
-    "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=6&smid=0&page=3",
-  ];
+  // Official SEBI Circulars listing: sid=1 (Legal) ssid=7 (Circulars).
+  // Page 1 comes from the full HTML listing; subsequent pages use the
+  // AJAX endpoint /sebiweb/ajax/home/getnewslistinfo.jsp that returns
+  // just the table fragment. We paginate until we stop getting new items
+  // or hit a safety cap.
   const all: NormalizedItem[] = [];
-  for (const url of listingUrls) {
-    const html = await fetchHtml(url, "https://www.sebi.gov.in/");
-    if (!html) continue;
-    all.push(...parseSebiCirculars(html));
+  const listingUrl =
+    "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=7&smid=0";
+  const first = await fetchHtml(listingUrl, "https://www.sebi.gov.in/");
+  if (first) all.push(...parseSebiCirculars(first));
+
+  const ajaxUrl = "https://www.sebi.gov.in/sebiweb/ajax/home/getnewslistinfo.jsp";
+  const MAX_PAGES = 40; // ~1000 circulars; safety cap
+  for (let nextValue = 1; nextValue <= MAX_PAGES; nextValue++) {
+    const body =
+      `nextValue=${nextValue}&next=n&search=&fromDate=&toDate=&fromYear=&toYear=` +
+      `&deptId=&sid=1&ssid=7&smid=0&ssidhidden=7&intmid=-1` +
+      `&sText=Legal&ssText=Circulars&smText=&doDirect=1`;
+    const frag = await fetchHtml(ajaxUrl, listingUrl, {
+      method: "POST",
+      body,
+      timeoutMs: 20000,
+    });
+    if (!frag) break;
+    const before = all.length;
+    const parsed = parseSebiCirculars(frag);
+    // Dedup against accumulator by URL
+    const known = new Set(all.map((i) => i.url));
+    for (const it of parsed) if (!known.has(it.url)) all.push(it);
+    if (all.length === before) break; // no new rows → end of listing
   }
+
   const map = new Map<string, NormalizedItem>();
   for (const it of all) if (!map.has(it.url)) map.set(it.url, it);
   return Array.from(map.values());
@@ -287,6 +327,10 @@ function parseCertInHtml(html: string): NormalizedItem[] {
     if (dateMatch) {
       const d = new Date(`${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}`);
       if (!isNaN(d.getTime())) published_at = d.toISOString();
+    } else {
+      // fall back to year from advisory id (CIVN-2026-1234)
+      const yearM = /CI(?:VN|AD)-(\d{4})-/.exec(advId);
+      if (yearM) published_at = new Date(`${yearM[1]}-01-01T00:00:00Z`).toISOString();
     }
     items.push({
       external_id: advId,
@@ -303,14 +347,29 @@ function parseCertInHtml(html: string): NormalizedItem[] {
 }
 
 async function scrapeCertIn(): Promise<NormalizedItem[]> {
+  // Always include 2026 explicitly plus current & recent years; some
+  // deployments were missing 2026 items because the year loop silently
+  // dropped fetches that timed out. We now retry each year once and
+  // extend the per-fetch timeout.
   const currentYear = new Date().getUTCFullYear();
-  const years = [currentYear, currentYear - 1, currentYear - 2];
+  const years = Array.from(new Set([2026, currentYear, currentYear - 1, currentYear - 2])).sort(
+    (a, b) => b - a,
+  );
   const items: NormalizedItem[] = [];
   for (const year of years) {
     const url = `https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year=${year}`;
-    const html = await fetchHtml(url, "https://www.cert-in.org.in/");
-    if (!html) continue;
-    items.push(...parseCertInHtml(html));
+    let html = await fetchHtml(url, "https://www.cert-in.org.in/", { timeoutMs: 30000 });
+    if (!html) {
+      // one retry
+      html = await fetchHtml(url, "https://www.cert-in.org.in/", { timeoutMs: 30000 });
+    }
+    if (!html) {
+      console.warn("[sync cert-in] year unreachable", year);
+      continue;
+    }
+    const parsed = parseCertInHtml(html);
+    console.log(`[sync cert-in] year ${year}: ${parsed.length} items`);
+    items.push(...parsed);
   }
   const map = new Map<string, NormalizedItem>();
   for (const it of items) if (!map.has(it.external_id)) map.set(it.external_id, it);
