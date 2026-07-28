@@ -195,7 +195,7 @@ function DashboardPage() {
 
       <FeedSection
         icon={FileText}
-        title="SEBI What's New"
+        title="SEBI Circulars"
         subtitle="Latest items from SEBI's official What's New feed"
         viewAllTo="/sebi"
         sourceKey="sebi-whats-new"
