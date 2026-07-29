@@ -283,23 +283,15 @@ async function scrapeSebiSection(ssid: number, type: SebiDocType): Promise<Norma
   const out: NormalizedItem[] = [];
   const seen = new Set<string>();
   const listingUrl = `https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=${ssid}&smid=0`;
-  const first = await fetchHtml(listingUrl, "https://www.sebi.gov.in/", { timeoutMs: 30000 });
-  if (first) {
-    for (const it of parseSebiListing(first, type)) {
-      if (!seen.has(it.url)) {
-        seen.add(it.url);
-        out.push(it);
-      }
-    }
-  }
-
   const ajaxUrl = "https://www.sebi.gov.in/sebiweb/ajax/home/getnewslistinfo.jsp";
+  // The listing paginates through the AJAX endpoint. `doDirect` is the
+  // zero-based page index (0 = the first page shown on the listing URL).
   const MAX_PAGES = 40; // ~1000 records per type; safety cap
-  for (let nextValue = 2; nextValue <= MAX_PAGES; nextValue++) {
+  for (let page = 0; page < MAX_PAGES; page++) {
     const body =
-      `nextValue=${nextValue}&next=n&search=&fromDate=&toDate=&fromYear=&toYear=` +
-      `&deptId=&sid=1&ssid=${ssid}&smid=0&ssidhidden=${ssid}&intmid=-1` +
-      `&sText=Legal&ssText=${encodeURIComponent(type)}&smText=&doDirect=1`;
+      `nextValue=${page}&next=n&search=&fromDate=&toDate=&fromYear=&toYear=` +
+      `&deptId=-1&sid=1&ssid=${ssid}&smid=0&ssidhidden=${ssid}&intmid=-1` +
+      `&sText=Legal&ssText=${encodeURIComponent(type)}&smText=&doDirect=${page}`;
     const frag = await fetchHtml(ajaxUrl, listingUrl, { method: "POST", body, timeoutMs: 25000 });
     if (!frag) break;
     const parsed = parseSebiListing(frag, type);
@@ -315,6 +307,7 @@ async function scrapeSebiSection(ssid: number, type: SebiDocType): Promise<Norma
   console.log(`[sync sebi] ${type}: ${out.length} records`);
   return out;
 }
+
 
 async function scrapeSebi(): Promise<NormalizedItem[]> {
   const all: NormalizedItem[] = [];
