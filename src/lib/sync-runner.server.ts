@@ -210,89 +210,179 @@ async function fetchHtml(
   }
 }
 
-// Parse SEBI Circulars listing HTML/fragment. Extracts rows with date + title
-// link to a canonical SEBI circulars URL. Works on both the full listing
-// page (ssid=7) and the AJAX fragment returned by getnewslistinfo.jsp.
-function parseSebiCirculars(html: string): NormalizedItem[] {
+// ---------------- Official SEBI Legal Repository ----------------
+//
+// Source of truth: https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=<n>&smid=0
+//   ssid=7 → Circulars, ssid=5 → Guidelines, ssid=3 → Regulations
+// "Advisory" documents are published inside the same legal repository (they
+// carry "Advisory" in the official title), so they are tagged from the same
+// official rows. No RSS, no Google News, no third-party sources.
+
+export const SEBI_DOC_TYPES = ["Circulars", "Guidelines", "Advisory", "Regulations"] as const;
+export type SebiDocType = (typeof SEBI_DOC_TYPES)[number];
+
+const SEBI_SECTIONS: Array<{ ssid: number; type: SebiDocType }> = [
+  { ssid: 7, type: "Circulars" },
+  { ssid: 5, type: "Guidelines" },
+  { ssid: 3, type: "Regulations" },
+];
+
+function sebiDocId(url: string): string {
+  const m = /_(\d{3,})\.html?$/i.exec(url);
+  return m ? `sebi-${m[1]}` : hash(`sebi:${url}`);
+}
+
+// Parse a SEBI legal listing table (full page or AJAX fragment).
+// Rows are: <td>date</td><td><a href=...>title</a></td>
+function parseSebiListing(html: string, docType: SebiDocType): NormalizedItem[] {
   const items: NormalizedItem[] = [];
   const seen = new Set<string>();
   const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
   let r: RegExpExecArray | null;
   while ((r = rowRe.exec(html)) !== null) {
     const row = r[1];
-    // First <td> should be a date like "Jul 23, 2026"
-    const tdMatches = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
-    if (tdMatches.length < 2) continue;
-    const dateText = stripHtml(tdMatches[0][1]);
-    const dateMatch = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),\s+(\d{4})$/i.exec(
-      dateText,
-    );
-    if (!dateMatch) continue;
-    // The link cell is the last <td> in Circulars listing
-    const linkCell = tdMatches[tdMatches.length - 1][1];
-    const a = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(linkCell);
+    const tds = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    if (tds.length < 2) continue;
+    const dateText = stripHtml(tds[0][1]);
+    const dm = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),\s+(\d{4})$/i.exec(dateText);
+    if (!dm) continue;
+    const linkCell = tds[tds.length - 1][1];
+    const a = /<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i.exec(linkCell);
     if (!a) continue;
-    const href = a[1];
-    if (!/sebi\.gov\.in|^\/(?:legal|sebi_data|web)/i.test(href)) continue;
+    const href = a[1].replace(/&amp;/g, "&");
     const title = stripHtml(a[2]).slice(0, 500);
     if (!title || title.length < 6) continue;
-    const url = href.startsWith("http") ? href : `https://www.sebi.gov.in${href.startsWith("/") ? "" : "/"}${href}`;
+    const url = href.startsWith("http")
+      ? href
+      : `https://www.sebi.gov.in${href.startsWith("/") ? "" : "/"}${href}`;
+    if (!/sebi\.gov\.in/i.test(url)) continue;
     if (seen.has(url)) continue;
     seen.add(url);
-    const d = new Date(`${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}`);
+    const d = new Date(`${dm[1]} ${dm[2]} ${dm[3]}`);
     const published_at = isNaN(d.getTime()) ? null : d.toISOString();
+    // Official type comes from the listing section. Advisory documents live
+    // inside the same legal listing and are identified by their official title.
+    const category: SebiDocType = /\badvisor(y|ies)\b/i.test(title) ? "Advisory" : docType;
     const numMatch = /(SEBI\/HO\/[A-Z0-9_\-/]+\/\d{4}\/\d+|CIR\/[A-Z0-9_\-/]+\/\d+)/i.exec(title);
     items.push({
-      external_id: hash(`sebi:${url}`),
+      external_id: sebiDocId(url),
       title,
       url,
       publisher: "SEBI",
-      category: classifySebi(title),
+      category,
       published_at,
-      snippet: numMatch ? `Circular No. ${numMatch[1]}` : null,
+      snippet: numMatch ? `${category.replace(/s$/, "")} No. ${numMatch[1]}` : null,
       attachment_url: url.toLowerCase().endsWith(".pdf") ? url : null,
+      raw: { doc_type: category, listing_type: docType, topic: classifySebi(title) },
     });
   }
   return items;
 }
 
-async function scrapeSebi(): Promise<NormalizedItem[]> {
-  // Official SEBI Circulars listing: sid=1 (Legal) ssid=7 (Circulars).
-  // Page 1 comes from the full HTML listing; subsequent pages use the
-  // AJAX endpoint /sebiweb/ajax/home/getnewslistinfo.jsp that returns
-  // just the table fragment. We paginate until we stop getting new items
-  // or hit a safety cap.
-  const all: NormalizedItem[] = [];
-  const listingUrl =
-    "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=7&smid=0";
-  const first = await fetchHtml(listingUrl, "https://www.sebi.gov.in/");
-  if (first) all.push(...parseSebiCirculars(first));
-
+async function scrapeSebiSection(ssid: number, type: SebiDocType): Promise<NormalizedItem[]> {
+  const out: NormalizedItem[] = [];
+  const seen = new Set<string>();
+  const listingUrl = `https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=${ssid}&smid=0`;
   const ajaxUrl = "https://www.sebi.gov.in/sebiweb/ajax/home/getnewslistinfo.jsp";
-  const MAX_PAGES = 40; // ~1000 circulars; safety cap
-  for (let nextValue = 1; nextValue <= MAX_PAGES; nextValue++) {
+  // The listing paginates through the AJAX endpoint. `doDirect` is the
+  // zero-based page index (0 = the first page shown on the listing URL).
+  const MAX_PAGES = 40; // ~1000 records per type; safety cap
+  for (let page = 0; page < MAX_PAGES; page++) {
     const body =
-      `nextValue=${nextValue}&next=n&search=&fromDate=&toDate=&fromYear=&toYear=` +
-      `&deptId=&sid=1&ssid=7&smid=0&ssidhidden=7&intmid=-1` +
-      `&sText=Legal&ssText=Circulars&smText=&doDirect=1`;
-    const frag = await fetchHtml(ajaxUrl, listingUrl, {
-      method: "POST",
-      body,
-      timeoutMs: 20000,
-    });
+      `nextValue=${page}&next=n&search=&fromDate=&toDate=&fromYear=&toYear=` +
+      `&deptId=-1&sid=1&ssid=${ssid}&smid=0&ssidhidden=${ssid}&intmid=-1` +
+      `&sText=Legal&ssText=${encodeURIComponent(type)}&smText=&doDirect=${page}`;
+    const frag = await fetchHtml(ajaxUrl, listingUrl, { method: "POST", body, timeoutMs: 25000 });
     if (!frag) break;
-    const before = all.length;
-    const parsed = parseSebiCirculars(frag);
-    // Dedup against accumulator by URL
-    const known = new Set(all.map((i) => i.url));
-    for (const it of parsed) if (!known.has(it.url)) all.push(it);
-    if (all.length === before) break; // no new rows → end of listing
+    const parsed = parseSebiListing(frag, type);
+    let fresh = 0;
+    for (const it of parsed) {
+      if (seen.has(it.url)) continue;
+      seen.add(it.url);
+      out.push(it);
+      fresh++;
+    }
+    if (fresh === 0) break; // end of listing
   }
+  console.log(`[sync sebi] ${type}: ${out.length} records`);
+  return out;
+}
 
+
+async function scrapeSebi(): Promise<NormalizedItem[]> {
+  const all: NormalizedItem[] = [];
+  for (const s of SEBI_SECTIONS) {
+    try {
+      all.push(...(await scrapeSebiSection(s.ssid, s.type)));
+    } catch (e) {
+      console.warn("[sync sebi] section failed", s.type, (e as Error).message);
+    }
+  }
   const map = new Map<string, NormalizedItem>();
-  for (const it of all) if (!map.has(it.url)) map.set(it.url, it);
+  for (const it of all) if (!map.has(it.external_id)) map.set(it.external_id, it);
   return Array.from(map.values());
 }
+
+// Enrich freshly stored SEBI documents with the official PDF link, the
+// circular/document number and a short AI summary. Bounded so a sync never
+// stalls on a large backfill; un-enriched rows still display fine.
+async function enrichSebiRows(
+  supa: ReturnType<typeof adminClient>,
+  rows: Array<{ id: string; title: string; url: string; category: string | null }>,
+) {
+  const targets = rows.slice(0, 30);
+  for (const row of targets) {
+    try {
+      const patch: { attachment_url?: string; snippet?: string; ai_summary?: string } = {};
+      if (/\.html?$/i.test(row.url)) {
+        const html = await fetchHtml(row.url, "https://www.sebi.gov.in/", { timeoutMs: 20000 });
+        if (html) {
+          const pdf = /sebi_data\/attachdocs\/[^"'?<>\s]+\.pdf/i.exec(html);
+          if (pdf) patch.attachment_url = `https://www.sebi.gov.in/${pdf[0]}`;
+          const num = /(?:Circular|Notification|Guideline)\s*No\.?:?\s*<\/span>\s*<span>([^<]+)</i.exec(html);
+          if (num) patch.snippet = `${row.category ?? "Document"} No. ${stripHtml(num[1])}`;
+        }
+      }
+      const summary = await summarizeSebi(row.title, row.category);
+      if (summary) patch.ai_summary = summary;
+      if (Object.keys(patch).length > 0) {
+        await supa.from("feed_articles").update(patch).eq("id", row.id);
+      }
+    } catch (e) {
+      console.warn("[sync sebi] enrich failed", row.url, (e as Error).message);
+    }
+  }
+}
+
+async function summarizeSebi(title: string, category: string | null): Promise<string | null> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) return null;
+  try {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You summarise Indian securities-market regulation. Reply with ONE plain sentence (max 30 words) describing what this SEBI document does and who it applies to. No preamble.",
+          },
+          { role: "user", content: `SEBI ${category ?? "document"}: ${title}` },
+        ],
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) return null;
+    const json: any = await res.json();
+    const text = json?.choices?.[0]?.message?.content;
+    return typeof text === "string" && text.trim() ? text.trim().slice(0, 400) : null;
+  } catch {
+    return null;
+  }
+}
+
 
 // ---------------- CERT-In Advisory Repository (official only) ----------------
 //
@@ -588,14 +678,18 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
         const { data, error } = await supa
           .from("feed_articles")
           .upsert(rows, { onConflict: "source_key,external_id", ignoreDuplicates: true })
-          .select("id, title, severity, url");
+          .select("id, title, severity, url, category");
         if (error) throw error;
         added = data?.length ?? 0;
         if (data && data.length > 0) {
+          if (sourceKey === "sebi-whats-new") await enrichSebiRows(supa, data);
           await supa.from("notifications").insert(
             data.slice(0, 25).map((d) => ({
               source_key: sourceKey,
-              title: d.title,
+              title:
+                sourceKey === "sebi-whats-new" && d.category
+                  ? `SEBI ${d.category}: ${d.title}`
+                  : d.title,
               body: null,
               link: d.url,
               article_id: d.id,
@@ -604,6 +698,7 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
           );
         }
       }
+
     }
 
     await supa

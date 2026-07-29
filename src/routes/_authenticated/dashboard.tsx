@@ -195,11 +195,12 @@ function DashboardPage() {
 
       <FeedSection
         icon={FileText}
-        title="SEBI Circulars"
-        subtitle="Latest items from SEBI's official What's New feed"
+        title="SEBI Legal Updates"
+        subtitle="Circulars, Guidelines, Advisory & Regulations from the official SEBI legal repository"
         viewAllTo="/sebi"
+        viewAllLabel="View All SEBI Legal Updates"
         sourceKey="sebi-whats-new"
-        items={sebi.slice(0, 8)}
+        items={sebi.slice(0, 5)}
         loading={feedQ.isLoading}
         isNew={isNew}
         renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="primary" showCategory />}
@@ -365,6 +366,7 @@ function FeedSection({
   title,
   subtitle,
   viewAllTo,
+  viewAllLabel,
   sourceKey,
   items,
   loading,
@@ -374,6 +376,7 @@ function FeedSection({
   title: string;
   subtitle: string;
   viewAllTo: string;
+  viewAllLabel?: string;
   sourceKey: string;
   items: FeedArticle[];
   loading: boolean;
@@ -416,7 +419,7 @@ function FeedSection({
             to={viewAllTo as any}
             className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
           >
-            View all <ArrowRight className="h-3 w-3" />
+            {viewAllLabel ?? "View all"} <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </div>
