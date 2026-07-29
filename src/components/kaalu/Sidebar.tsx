@@ -135,7 +135,7 @@ export function Sidebar() {
           active={isSebi}
           onClick={() => navigate({ to: "/sebi" })}
           icon={<FileText className="h-4 w-4" />}
-          label="SEBI Circulars"
+          label="SEBI Legal"
         />
         <NavItem
           active={isCertIn}
