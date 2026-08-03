@@ -336,7 +336,7 @@ function MessageList({
                   <div className="whitespace-pre-wrap text-sm">{text}</div>
                 ) : (
                   <>
-                    <div className="prose prose-invert prose-sm max-w-none [&_p]:my-2 [&_pre]:bg-black/40 [&_pre]:border [&_pre]:border-border [&_pre]:rounded-lg [&_code]:text-primary">
+                    <div className="prose prose-sm max-w-none [&_p]:my-2 [&_pre]:bg-muted [&_pre]:border [&_pre]:border-border [&_pre]:rounded-lg [&_code]:text-primary">
                       <ReactMarkdown>{text || "…"}</ReactMarkdown>
                     </div>
                     <div className="mt-1 flex gap-1 opacity-60 hover:opacity-100 transition">
