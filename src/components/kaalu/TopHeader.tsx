@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, RefreshCw, Search, User } from "lucide-react";
+import { Bell, Menu, RefreshCw, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UtiLogo } from "./UtiLogo";
 import { supabase } from "@/integrations/supabase/client";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sidebar } from "./Sidebar";
 
 export function TopHeader() {
   const navigate = useNavigate();
@@ -40,6 +42,24 @@ export function TopHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-primary text-primary-foreground">
       <div className="flex items-center gap-4 px-4 py-2.5 sm:px-6">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Open navigation"
+              className="shrink-0 text-primary-foreground hover:bg-primary-foreground/15 md:hidden"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 p-0">
+            <div className="[&>aside]:flex [&>aside]:h-full [&>aside]:w-full [&>aside]:sticky-0">
+              <Sidebar />
+            </div>
+          </SheetContent>
+        </Sheet>
+
         <div className="flex min-w-0 items-center gap-3">
           <div className="hidden shrink-0 rounded-md bg-white px-2 py-1 sm:block">
             <UtiLogo className="h-6" />
