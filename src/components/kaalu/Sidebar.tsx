@@ -20,7 +20,6 @@ import {
   LogOut,
   Trash2,
   Pencil,
-  Sparkles,
   History,
   LayoutDashboard,
   Package,
@@ -41,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { UtiLogo } from "./UtiLogo";
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -112,7 +112,7 @@ export function Sidebar() {
 
 
 
-      <nav className="px-3 space-y-1">
+      <nav className="px-3 py-3 space-y-1 overflow-y-auto">
         <NavItem
           active={isDashboard}
           onClick={() => navigate({ to: "/dashboard" })}
@@ -223,7 +223,7 @@ export function Sidebar() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search"
-              className="h-8 pl-8 text-sm bg-muted/50 border-border"
+              className="h-8 pl-8 text-sm"
             />
           </div>
           <ScrollArea className="flex-1 -mx-1">
@@ -302,8 +302,8 @@ function NavItem({
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
         active
-          ? "bg-primary/15 text-primary neon-ring"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+          : "text-foreground/70 hover:text-primary hover:bg-sidebar-accent"
       }`}
     >
       {icon}
@@ -353,7 +353,7 @@ function ConvRow({
   return (
     <div
       className={`group flex items-center rounded-md ${
-        active ? "bg-muted" : "hover:bg-muted"
+        active ? "bg-sidebar-accent text-primary" : "hover:bg-sidebar-accent"
       }`}
     >
       <button
