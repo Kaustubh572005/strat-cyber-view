@@ -99,18 +99,18 @@ export function Sidebar() {
     (location.pathname.match(/^\/voice\/([^/]+)/) || [])[1] || null;
 
   return (
-    <aside className="w-72 shrink-0 h-screen sticky top-0 glass-strong border-r border-border flex flex-col">
-      <div className="p-4 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full neon-ring flex items-center justify-center">
-          <Sparkles className="h-4 w-4 text-primary" />
-        </div>
-        <div>
-          <div className="font-semibold neon-text tracking-wide">Kaalu</div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Executive AI
+    <aside className="hidden md:flex w-64 shrink-0 h-screen sticky top-0 bg-sidebar border-r border-sidebar-border flex-col">
+      <div className="px-4 py-3.5 border-b border-sidebar-border">
+        <UtiLogo className="h-7" />
+        <div className="mt-2.5">
+          <div className="text-sm font-semibold tracking-tight text-primary">Kaalu AI</div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            Cyber Intelligence
           </div>
         </div>
       </div>
+
+
 
       <nav className="px-3 space-y-1">
         <NavItem
