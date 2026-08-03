@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Kaalu AI — Cyber Intelligence & Productivity Assistant" },
+      { title: "Kaalu AI | UTI AMC — Cyber Intelligence Platform" },
       {
         name: "description",
         content:
@@ -92,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "author", content: "Kaalu AI" },
       { name: "application-name", content: "Kaalu AI" },
       { property: "og:site_name", content: "Kaalu AI" },
-      { property: "og:title", content: "Kaalu AI — Cyber Intelligence & Productivity Assistant" },
+      { property: "og:title", content: "Kaalu AI | UTI AMC — Cyber Intelligence Platform" },
       {
         property: "og:description",
         content:
@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Kaalu AI — Cyber Intelligence & Productivity Assistant" },
+      { name: "twitter:title", content: "Kaalu AI | UTI AMC — Cyber Intelligence Platform" },
       {
         name: "twitter:description",
         content:
