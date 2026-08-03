@@ -99,20 +99,20 @@ function UtiAmcPage() {
         </button>
       </header>
 
-      <section className="glass rounded-xl p-4 border border-white/5 flex flex-wrap gap-3 items-center">
+      <section className="glass rounded-xl p-4 border border-border flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[240px]">
           <SearchIcon className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search headlines, sources…"
-            className="h-9 pl-8 text-sm bg-white/5 border-white/10"
+            className="h-9 pl-8 text-sm bg-muted/50 border-border"
           />
         </div>
         <select
           value={incidentType}
           onChange={(e) => setIncidentType(e.target.value)}
-          className="h-9 px-2 text-xs bg-white/5 border border-white/10 rounded"
+          className="h-9 px-2 text-xs bg-muted/50 border border-border rounded"
         >
           {INCIDENT_TYPES.map((t) => (
             <option key={t} value={t}>
@@ -123,7 +123,7 @@ function UtiAmcPage() {
         <select
           value={source}
           onChange={(e) => setSource(e.target.value)}
-          className="h-9 px-2 text-xs bg-white/5 border border-white/10 rounded max-w-[200px]"
+          className="h-9 px-2 text-xs bg-muted/50 border border-border rounded max-w-[200px]"
         >
           {sources.map((s) => (
             <option key={s} value={s}>
@@ -135,7 +135,7 @@ function UtiAmcPage() {
           type="date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          className="h-9 text-xs bg-white/5 border-white/10 w-[140px]"
+          className="h-9 text-xs bg-muted/50 border-border w-[140px]"
         />
         <span className="text-xs text-muted-foreground">
           {filtered.length} of {items.length}
@@ -145,7 +145,7 @@ function UtiAmcPage() {
       {query.isLoading ? (
         <div className="text-sm text-muted-foreground">Loading repository…</div>
       ) : filtered.length === 0 ? (
-        <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-white/5">
+        <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-border">
           {items.length === 0
             ? "No records yet. Click Refresh to populate the repository."
             : "No matching items. Try clearing filters."}
@@ -164,7 +164,7 @@ function UtiAmcPage() {
 function UtiRow({ article }: { article: FeedArticle }) {
   const sev = article.severity ?? "info";
   return (
-    <li className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition">
+    <li className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition">
       <div className="flex items-start gap-3 flex-wrap">
         <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">
@@ -173,7 +173,7 @@ function UtiRow({ article }: { article: FeedArticle }) {
               {sev}
             </span>
             {article.category && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded border border-white/10 text-muted-foreground">
+              <span className="text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground">
                 {article.category}
               </span>
             )}

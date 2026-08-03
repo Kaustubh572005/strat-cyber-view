@@ -104,20 +104,20 @@ function NsePage() {
         </button>
       </header>
 
-      <section className="glass rounded-xl p-4 border border-white/5 flex flex-wrap gap-3 items-center">
+      <section className="glass rounded-xl p-4 border border-border flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[240px]">
           <SearchIcon className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search company / symbol / subject…"
-            className="h-9 pl-8 text-sm bg-white/5 border-white/10"
+            className="h-9 pl-8 text-sm bg-muted/50 border-border"
           />
         </div>
         <select
           value={incident}
           onChange={(e) => setIncident(e.target.value)}
-          className="h-9 rounded-md bg-white/5 border border-white/10 px-2 text-sm"
+          className="h-9 rounded-md bg-muted/50 border border-border px-2 text-sm"
         >
           <option value="ALL">All incident types</option>
           {incidents.map((i) => (
@@ -129,7 +129,7 @@ function NsePage() {
         <select
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className="h-9 rounded-md bg-white/5 border border-white/10 px-2 text-sm"
+          className="h-9 rounded-md bg-muted/50 border border-border px-2 text-sm"
         >
           <option value="ALL">All years</option>
           {years.map((y) => (
@@ -141,7 +141,7 @@ function NsePage() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
-          className="h-9 rounded-md bg-white/5 border border-white/10 px-2 text-sm"
+          className="h-9 rounded-md bg-muted/50 border border-border px-2 text-sm"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
@@ -155,7 +155,7 @@ function NsePage() {
       {query.isLoading ? (
         <div className="text-sm text-muted-foreground">Loading repository…</div>
       ) : filtered.length === 0 ? (
-        <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-white/5">
+        <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-border">
           No matching notices. Try clearing filters or clicking Refresh.
         </div>
       ) : (
@@ -171,7 +171,7 @@ function NsePage() {
 
 function NseRow({ row }: { row: NseDisclosureRow }) {
   return (
-    <li className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition">
+    <li className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition">
       <div className="flex items-start gap-3 flex-wrap">
         <Building2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">
@@ -182,7 +182,7 @@ function NseRow({ row }: { row: NseDisclosureRow }) {
               </span>
             )}
             {row.symbol && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 uppercase tracking-widest text-muted-foreground">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 border border-border uppercase tracking-widest text-muted-foreground">
                 {row.symbol}
               </span>
             )}

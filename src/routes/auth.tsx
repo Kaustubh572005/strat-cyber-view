@@ -127,7 +127,7 @@ function AuthPage() {
           </p>
         </div>
         <Tabs defaultValue="signin">
-          <TabsList className="grid w-full grid-cols-2 bg-white/5">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
             <TabsTrigger value="signin">Sign in</TabsTrigger>
             <TabsTrigger value="signup">Create account</TabsTrigger>
           </TabsList>

@@ -71,7 +71,7 @@ export function RecipientInput({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border border-white/10 bg-white/5 rounded-md px-2 py-1.5 min-h-10 relative">
+    <div className="flex flex-wrap items-center gap-1 border border-border bg-muted/50 rounded-md px-2 py-1.5 min-h-10 relative">
       <div className="text-xs text-muted-foreground w-8">{label}</div>
       {value.map((r, i) => (
         <span
@@ -113,7 +113,7 @@ export function RecipientInput({
         className="flex-1 min-w-[100px] bg-transparent text-sm outline-none"
       />
       {open && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 mt-1 w-full glass-strong rounded-md z-40 shadow-xl border border-white/10 overflow-hidden">
+        <div className="absolute top-full left-0 mt-1 w-full glass-strong rounded-md z-40 shadow-xl border border-border overflow-hidden">
           {suggestions.map((s, i) => (
             <button
               key={s.email + i}

@@ -218,7 +218,7 @@ export function VoiceAgent({ conversationId }: { conversationId: string | null }
               streaming={status === "streaming"}
               onSpeak={(t) => tts.speak(t)}
             />
-            <div className="hidden lg:flex items-center justify-center border-l border-white/5 glass">
+            <div className="hidden lg:flex items-center justify-center border-l border-border glass">
               <div className="w-[300px] h-[300px]">
                 <AiCore state={coreState} amplitude={amplitude} />
               </div>
@@ -228,7 +228,7 @@ export function VoiceAgent({ conversationId }: { conversationId: string | null }
       </div>
 
       {/* Composer */}
-      <div className="glass-strong border-t border-white/5 px-4 py-3">
+      <div className="glass-strong border-t border-border px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-end gap-2">
           <Button
             variant={voice.state === "recording" ? "destructive" : "secondary"}
@@ -258,7 +258,7 @@ export function VoiceAgent({ conversationId }: { conversationId: string | null }
                   ? "Transcribing…"
                   : "Ask Kaalu anything…"
             }
-            className="min-h-[48px] max-h-[200px] resize-none bg-white/5 border-white/10"
+            className="min-h-[48px] max-h-[200px] resize-none bg-muted/50 border-border"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -336,7 +336,7 @@ function MessageList({
                   <div className="whitespace-pre-wrap text-sm">{text}</div>
                 ) : (
                   <>
-                    <div className="prose prose-invert prose-sm max-w-none [&_p]:my-2 [&_pre]:bg-black/40 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-lg [&_code]:text-primary">
+                    <div className="prose prose-invert prose-sm max-w-none [&_p]:my-2 [&_pre]:bg-black/40 [&_pre]:border [&_pre]:border-border [&_pre]:rounded-lg [&_code]:text-primary">
                       <ReactMarkdown>{text || "…"}</ReactMarkdown>
                     </div>
                     <div className="mt-1 flex gap-1 opacity-60 hover:opacity-100 transition">
