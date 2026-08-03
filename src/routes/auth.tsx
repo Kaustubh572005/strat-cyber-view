@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { StarField } from "@/components/kaalu/StarField";
+import { UtiLogo } from "@/components/kaalu/UtiLogo";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -116,14 +117,14 @@ function AuthPage() {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center px-4">
       <StarField />
-      <div className="glass-strong relative z-10 w-full max-w-md rounded-2xl p-8 neon-ring">
+      <div className="fade-in-soft relative z-10 w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+        <div className="h-1.5 w-full bg-linear-to-r from-primary via-primary/60 to-uti-orange" />
+        <div className="p-8">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 h-12 w-12 rounded-full neon-ring flex items-center justify-center">
-            <div className="h-3 w-3 rounded-full bg-primary shadow-[0_0_20px] shadow-primary" />
-          </div>
-          <h1 className="text-3xl font-semibold neon-text">Kaalu</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your voice-first AI executive assistant
+          <UtiLogo className="mx-auto mb-4 h-9" />
+          <h1 className="text-2xl font-semibold tracking-tight text-primary">Kaalu AI</h1>
+          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            UTI AMC · Cyber Intelligence Platform
           </p>
         </div>
         <Tabs defaultValue="signin">
@@ -192,6 +193,10 @@ function AuthPage() {
         <p className="mt-6 text-xs text-muted-foreground text-center">
           After signing in, connect your Microsoft account to enable Outlook mail features.
         </p>
+        </div>
+        <div className="border-t border-border bg-muted px-8 py-2.5 text-center text-[10px] text-muted-foreground">
+          Information Classification: <span className="font-semibold text-primary">UTI AMC – Confidential</span>
+        </div>
       </div>
     </div>
   );
