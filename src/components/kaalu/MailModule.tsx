@@ -121,7 +121,7 @@ export function MailModule() {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex items-center gap-2 px-6 py-4 border-b border-white/5">
+      <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
         <Button
           size="sm"
           onClick={() => {
@@ -138,7 +138,7 @@ export function MailModule() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search mail…"
-            className="pl-9 bg-white/5 border-white/10"
+            className="pl-9 bg-muted/50 border-border"
           />
         </div>
         <Button
@@ -165,7 +165,7 @@ export function MailModule() {
 
       <div className="flex-1 min-h-0 grid grid-cols-[220px_360px_1fr]">
         {/* Folders */}
-        <div className="border-r border-white/5 p-3 space-y-1">
+        <div className="border-r border-border p-3 space-y-1">
           {[
             ["inbox", "Inbox", <Inbox key="i" className="h-4 w-4" />] as const,
             ["drafts", "Drafts", <FileEdit key="d" className="h-4 w-4" />] as const,
@@ -181,20 +181,20 @@ export function MailModule() {
               className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition ${
                 folder === k
                   ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
               {icon}
               <span>{label}</span>
             </button>
           ))}
-          <div className="mt-6 pt-4 border-t border-white/5">
+          <div className="mt-6 pt-4 border-t border-border">
             <SummarizeInboxButton />
           </div>
         </div>
 
         {/* Message list */}
-        <div className="border-r border-white/5 min-h-0 flex flex-col">
+        <div className="border-r border-border min-h-0 flex flex-col">
           {listQ.isLoading && (
             <div className="p-4 text-sm text-muted-foreground">Loading…</div>
           )}
@@ -202,13 +202,13 @@ export function MailModule() {
             <div className="p-4 text-sm text-muted-foreground">No messages.</div>
           )}
           <ScrollArea className="flex-1">
-            <ul className="divide-y divide-white/5">
+            <ul className="divide-y divide-border">
               {messages.map((m) => (
                 <li key={m.id}>
                   <button
                     onClick={() => setSelectedId(m.id)}
-                    className={`w-full text-left px-4 py-3 hover:bg-white/5 ${
-                      selectedId === m.id ? "bg-white/10" : ""
+                    className={`w-full text-left px-4 py-3 hover:bg-muted ${
+                      selectedId === m.id ? "bg-muted" : ""
                     } ${!m.isRead ? "font-medium" : ""}`}
                   >
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -289,7 +289,7 @@ function ReadingPane({
 
   return (
     <div className="min-h-0 flex flex-col">
-      <div className="p-6 border-b border-white/5">
+      <div className="p-6 border-b border-border">
         <div className="text-xs text-muted-foreground">
           {new Date(message.receivedDateTime).toLocaleString()}
         </div>

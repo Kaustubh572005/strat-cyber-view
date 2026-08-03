@@ -129,7 +129,7 @@ function SebiPage() {
             className={`rounded-full px-4 py-1.5 text-sm border transition ${
               tab === t
                 ? "border-primary/50 bg-primary/15 text-primary"
-                : "border-white/10 text-muted-foreground hover:bg-white/5"
+                : "border-border text-muted-foreground hover:bg-muted"
             }`}
           >
             {t}
@@ -138,14 +138,14 @@ function SebiPage() {
         ))}
       </div>
 
-      <section className="glass rounded-xl p-4 border border-white/5 flex flex-wrap gap-3 items-center">
+      <section className="glass rounded-xl p-4 border border-border flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[240px]">
           <SearchIcon className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={`Search ${tab.toLowerCase()}…`}
-            className="h-9 pl-8 text-sm bg-white/5 border-white/10"
+            className="h-9 pl-8 text-sm bg-muted/50 border-border"
           />
         </div>
         <span className="text-xs text-muted-foreground">
@@ -156,7 +156,7 @@ function SebiPage() {
       {query.isLoading ? (
         <div className="text-sm text-muted-foreground">Loading repository…</div>
       ) : filtered.length === 0 ? (
-        <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-white/5">
+        <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-border">
           No {tab.toLowerCase()} stored yet. Click Refresh now to index the official SEBI listing.
         </div>
       ) : (
@@ -174,7 +174,7 @@ function SebiRow({ article, type }: { article: FeedArticle; type: Tab }) {
   const pdf =
     article.attachment_url ?? (article.url.toLowerCase().endsWith(".pdf") ? article.url : null);
   return (
-    <li className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition">
+    <li className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition">
       <div className="flex items-start gap-3 flex-wrap">
         <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">

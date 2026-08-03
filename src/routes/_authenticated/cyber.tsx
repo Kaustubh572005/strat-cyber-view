@@ -118,7 +118,7 @@ function CyberPage() {
                 key={a.id}
                 to="/cyber/$articleId"
                 params={{ articleId: a.id }}
-                className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition block"
+                className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition block"
               >
                 <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
                   <span className="text-primary">#{idx + 1}</span>
@@ -132,7 +132,7 @@ function CyberPage() {
                 {a.cves.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
                     {a.cves.slice(0, 3).map((c) => (
-                      <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">{c}</span>
+                      <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 border border-border">{c}</span>
                     ))}
                   </div>
                 )}
@@ -148,7 +148,7 @@ function CyberPage() {
               const items = data?.all.filter((a) => a.sourceId === s.id) ?? [];
               const latest = items[0];
               return (
-                <div key={s.id} className="glass rounded-lg p-3 border border-white/5">
+                <div key={s.id} className="glass rounded-lg p-3 border border-border">
                   <div className="flex items-center justify-between">
                     <div className="font-medium text-sm">{s.name}</div>
                     <a href={s.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary">
@@ -178,7 +178,7 @@ function CyberPage() {
               href={a.link}
               target="_blank"
               rel="noreferrer"
-              className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition"
+              className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition"
             >
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{a.source}</div>
               <div className="font-medium text-sm">{a.title}</div>
@@ -200,16 +200,16 @@ function CyberPage() {
               <button
                 key={s}
                 onClick={() => setCveSeverity(s)}
-                className={`text-[11px] px-2 py-1 rounded border ${cveSeverity === s ? "bg-primary/20 border-primary/40 text-primary" : "border-white/10 text-muted-foreground hover:text-foreground"}`}
+                className={`text-[11px] px-2 py-1 rounded border ${cveSeverity === s ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
               >
                 {s}
               </button>
             ))}
           </div>
         </div>
-        <div className="glass rounded-xl border border-white/5 overflow-hidden">
+        <div className="glass rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-white/5 text-xs uppercase text-muted-foreground">
+            <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
               <tr>
                 <th className="text-left px-3 py-2">CVE</th>
                 <th className="text-left px-3 py-2">CVSS</th>
@@ -222,7 +222,7 @@ function CyberPage() {
             </thead>
             <tbody>
               {filteredCves.slice(0, 25).map((c) => (
-                <tr key={c.id} className="border-t border-white/5">
+                <tr key={c.id} className="border-t border-border">
                   <td className="px-3 py-2">
                     <a
                       className="text-primary hover:underline"
@@ -255,7 +255,7 @@ function CyberPage() {
 
       {/* Data Breach Scanner */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass rounded-xl p-5 border border-white/5">
+        <div className="glass rounded-xl p-5 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <ShieldAlert className="h-4 w-4 text-primary" />
             <h2 className="text-lg font-semibold">Data Breach Checker</h2>
@@ -283,7 +283,7 @@ function CyberPage() {
           </div>
         </div>
 
-        <div className="glass rounded-xl p-5 border border-white/5">
+        <div className="glass rounded-xl p-5 border border-border">
           <h2 className="text-lg font-semibold mb-1">Security Reminders</h2>
           <p className="text-xs text-muted-foreground mb-3">Track patch reviews, audits, and compliance tasks. (Stored locally on this device.)</p>
           <SecurityReminders />
@@ -312,7 +312,7 @@ function Kpi({
   icon: React.ReactNode;
   accent?: "red" | "orange";
 }) {
-  const ring = accent === "red" ? "border-red-500/30" : accent === "orange" ? "border-orange-500/30" : "border-white/5";
+  const ring = accent === "red" ? "border-red-500/30" : accent === "orange" ? "border-orange-500/30" : "border-border";
   return (
     <div className={`glass rounded-xl p-3 border ${ring}`}>
       <div className="flex items-center justify-between text-muted-foreground text-[10px] uppercase tracking-widest">
@@ -346,8 +346,8 @@ function SecurityReminders() {
   return (
     <div>
       <div className="flex gap-2 mb-3">
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Task, e.g. Review Patch Tuesday" className="bg-white/5 border-white/10" />
-        <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="bg-white/5 border-white/10 w-40" />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Task, e.g. Review Patch Tuesday" className="bg-muted/50 border-border" />
+        <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="bg-muted/50 border-border w-40" />
         <Button
           size="sm"
           onClick={() => {

@@ -75,14 +75,14 @@ function CertInPage() {
         </button>
       </header>
 
-      <section className="glass rounded-xl p-4 border border-white/5 flex flex-wrap gap-3 items-center">
+      <section className="glass rounded-xl p-4 border border-border flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[240px]">
           <SearchIcon className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search advisories…"
-            className="h-9 pl-8 text-sm bg-white/5 border-white/10"
+            className="h-9 pl-8 text-sm bg-muted/50 border-border"
           />
         </div>
         <div className="flex gap-1">
@@ -93,7 +93,7 @@ function CertInPage() {
               className={`text-[11px] px-2 py-1 rounded border ${
                 sev === s
                   ? "bg-primary/20 border-primary/40 text-primary"
-                  : "border-white/10 text-muted-foreground hover:text-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
               {s.toUpperCase()}
@@ -108,7 +108,7 @@ function CertInPage() {
       {query.isLoading ? (
         <div className="text-sm text-muted-foreground">Loading repository…</div>
       ) : filtered.length === 0 ? (
-        <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-white/5">
+        <div className="text-sm text-muted-foreground text-center py-12 glass rounded-xl border border-border">
           No matching advisories. Try clearing filters or Refresh.
         </div>
       ) : (
@@ -125,7 +125,7 @@ function CertInPage() {
 function CertRow({ article }: { article: FeedArticle }) {
   const sev = article.severity ?? "info";
   return (
-    <li className="glass rounded-xl p-4 border border-white/5 hover:border-red-500/40 transition">
+    <li className="glass rounded-xl p-4 border border-border hover:border-red-500/40 transition">
       <div className="flex items-start gap-3 flex-wrap">
         <ShieldAlert className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">

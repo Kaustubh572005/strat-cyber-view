@@ -246,7 +246,7 @@ function DashboardPage() {
       />
 
       {/* Notification Center preview */}
-      <section className="glass rounded-2xl p-5 border border-white/5">
+      <section className="glass rounded-2xl p-5 border border-border">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-primary" />
@@ -299,7 +299,7 @@ function Kpi({
   return (
     <Link
       to={to as any}
-      className="group glass rounded-xl p-3.5 border border-white/5 hover:border-primary/40 transition block"
+      className="group glass rounded-xl p-3.5 border border-border hover:border-primary/40 transition block"
     >
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
         <Icon className="h-3.5 w-3.5" /> {label}
@@ -339,7 +339,7 @@ function RefreshAllButton() {
 function SourceHealthStrip({ status }: { status: SourceStatus[] }) {
   if (status.length === 0) return null;
   return (
-    <section className="glass rounded-xl p-3 border border-white/5 flex flex-wrap gap-3 text-xs">
+    <section className="glass rounded-xl p-3 border border-border flex flex-wrap gap-3 text-xs">
       {status.map((s) => (
         <div key={s.source_key} className="flex items-center gap-2">
           <span
@@ -395,7 +395,7 @@ function FeedSection({
     onError: (e) => toast.error((e as Error).message || "Sync failed"),
   });
   return (
-    <section className="glass rounded-2xl p-5 border border-white/5">
+    <section className="glass rounded-2xl p-5 border border-border">
       <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
         <div className="flex items-start gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
@@ -410,7 +410,7 @@ function FeedSection({
           <button
             onClick={() => mut.mutate()}
             disabled={mut.isPending}
-            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1 border border-white/10 rounded-full px-3 py-1.5 hover:bg-white/5 transition"
+            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1 border border-border rounded-full px-3 py-1.5 hover:bg-muted transition"
           >
             <RefreshCw className={`h-3 w-3 ${mut.isPending ? "animate-spin" : ""}`} />
             Refresh
@@ -426,7 +426,7 @@ function FeedSection({
       {loading && items.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 bg-muted/50 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -463,7 +463,7 @@ function NseSection({
     onError: (e) => toast.error((e as Error).message || "Sync failed"),
   });
   return (
-    <section className="glass rounded-2xl p-5 border border-white/5">
+    <section className="glass rounded-2xl p-5 border border-border">
       <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
         <div className="flex items-start gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
@@ -480,7 +480,7 @@ function NseSection({
           <button
             onClick={() => mut.mutate()}
             disabled={mut.isPending}
-            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1 border border-white/10 rounded-full px-3 py-1.5 hover:bg-white/5 transition"
+            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1 border border-border rounded-full px-3 py-1.5 hover:bg-muted transition"
           >
             <RefreshCw className={`h-3 w-3 ${mut.isPending ? "animate-spin" : ""}`} />
             Refresh
@@ -496,7 +496,7 @@ function NseSection({
       {loading && items.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 bg-muted/50 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -548,12 +548,12 @@ function ArticleCard({
       href={article.url}
       target="_blank"
       rel="noreferrer"
-      className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition block group"
+      className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition block group"
     >
       <div className="flex items-center gap-1.5 flex-wrap mb-2">
         {showSeverity && <span className={`text-[10px] px-1.5 py-0.5 rounded border ${sevColor[sev] ?? sevColor.info}`}>{sev}</span>}
         {showCategory && article.category && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 uppercase tracking-widest text-muted-foreground">
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 border border-border uppercase tracking-widest text-muted-foreground">
             {article.category}
           </span>
         )}
@@ -594,7 +594,7 @@ function ArticleCard({
 
 function NseCard({ row, isNew }: { row: NseDisclosureRow; isNew?: boolean }) {
   return (
-    <div className="glass rounded-xl p-4 border border-white/5 hover:border-primary/40 transition">
+    <div className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition">
       <div className="flex items-center gap-1.5 flex-wrap mb-2">
         {row.incident_type && (
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300 border border-orange-500/30 uppercase tracking-widest">
@@ -602,7 +602,7 @@ function NseCard({ row, isNew }: { row: NseDisclosureRow; isNew?: boolean }) {
           </span>
         )}
         {row.symbol && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 uppercase tracking-widest text-muted-foreground">
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 border border-border uppercase tracking-widest text-muted-foreground">
             {row.symbol}
           </span>
         )}

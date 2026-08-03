@@ -117,21 +117,21 @@ function PresentationsPage() {
         onSelect={setSelectedTemplateId}
       />
 
-      <section className="glass rounded-xl p-5 border border-white/5 space-y-4">
+      <section className="glass rounded-xl p-5 border border-border space-y-4">
         <div>
           <label className="text-xs uppercase tracking-widest text-muted-foreground">Topic</label>
           <Textarea
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="e.g. Zero-Trust Architecture for a mid-size fintech"
-            className="mt-1 bg-white/5 border-white/10"
+            className="mt-1 bg-muted/50 border-border"
             rows={2}
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground">Audience (optional)</label>
-            <Input value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. Executives, engineers, students" className="mt-1 bg-white/5 border-white/10" />
+            <Input value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. Executives, engineers, students" className="mt-1 bg-muted/50 border-border" />
           </div>
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -148,7 +148,7 @@ function PresentationsPage() {
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
-                className={`text-left rounded-lg p-3 border transition ${theme === t.id ? "border-primary/60 bg-primary/10" : "border-white/10 hover:border-white/30"}`}
+                className={`text-left rounded-lg p-3 border transition ${theme === t.id ? "border-primary/60 bg-primary/10" : "border-border hover:border-primary/40"}`}
               >
                 <div className="flex gap-1 mb-2">
                   {t.colors.map((c) => (<div key={c} className="h-4 w-4 rounded" style={{ background: c }} />))}
@@ -173,12 +173,12 @@ function PresentationsPage() {
       {slides.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-3">
-            <Input value={deckTitle} onChange={(e) => setDeckTitle(e.target.value)} className="max-w-md bg-white/5 border-white/10 text-lg font-semibold" />
+            <Input value={deckTitle} onChange={(e) => setDeckTitle(e.target.value)} className="max-w-md bg-muted/50 border-border text-lg font-semibold" />
             <Button size="sm" variant="ghost" onClick={addSlide}><Plus className="h-4 w-4 mr-1" /> Add slide</Button>
           </div>
           <div className="space-y-3">
             {slides.map((s, i) => (
-              <div key={i} className="glass rounded-xl p-4 border border-white/5">
+              <div key={i} className="glass rounded-xl p-4 border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Slide {i + 1}</span>
                   <div className="ml-auto flex gap-1">
@@ -190,19 +190,19 @@ function PresentationsPage() {
                 <Input
                   value={s.title}
                   onChange={(e) => updateSlide(i, { title: e.target.value })}
-                  className="bg-white/5 border-white/10 font-semibold mb-2"
+                  className="bg-muted/50 border-border font-semibold mb-2"
                 />
                 <Textarea
                   value={s.bullets.join("\n")}
                   onChange={(e) => updateSlide(i, { bullets: e.target.value.split("\n").filter(Boolean) })}
-                  className="bg-white/5 border-white/10 text-sm"
+                  className="bg-muted/50 border-border text-sm"
                   rows={Math.max(3, s.bullets.length)}
                 />
                 <Input
                   value={s.notes ?? ""}
                   onChange={(e) => updateSlide(i, { notes: e.target.value })}
                   placeholder="Speaker notes (optional)"
-                  className="mt-2 bg-white/5 border-white/10 text-xs"
+                  className="mt-2 bg-muted/50 border-border text-xs"
                 />
               </div>
             ))}
@@ -290,7 +290,7 @@ function TemplateManager({
   }
 
   return (
-    <section className="glass rounded-xl p-5 border border-white/5">
+    <section className="glass rounded-xl p-5 border border-border">
       <div className="flex items-center justify-between mb-3">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Template Manager</div>
@@ -327,7 +327,7 @@ function TemplateManager({
           <button
             onClick={() => onSelect(null)}
             className={`text-left rounded-lg p-3 border transition ${
-              selectedTemplateId === null ? "border-primary/60 bg-primary/10" : "border-white/10 hover:border-white/30"
+              selectedTemplateId === null ? "border-primary/60 bg-primary/10" : "border-border hover:border-primary/40"
             }`}
           >
             <div className="text-sm font-medium">Kaalu default</div>
@@ -399,7 +399,7 @@ function TemplateCard({
   return (
     <div
       className={`rounded-lg p-3 border transition ${
-        selected ? "border-primary/60 bg-primary/10" : "border-white/10 hover:border-white/30"
+        selected ? "border-primary/60 bg-primary/10" : "border-border hover:border-primary/40"
       }`}
     >
       <button onClick={onSelect} className="text-left w-full">

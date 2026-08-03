@@ -137,7 +137,7 @@ export function ComposeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong border-white/10 max-w-3xl">
+      <DialogContent className="glass-strong border-border max-w-3xl">
         <DialogHeader>
           <DialogTitle>New message</DialogTitle>
         </DialogHeader>
@@ -169,13 +169,13 @@ export function ComposeDialog({
             placeholder="Subject"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="bg-white/5 border-white/10"
+            className="bg-muted/50 border-border"
           />
           <Textarea
             placeholder="Write your message…"
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            className="min-h-[280px] bg-white/5 border-white/10 resize-none"
+            className="min-h-[280px] bg-muted/50 border-border resize-none"
           />
         </div>
 
@@ -187,7 +187,7 @@ export function ComposeDialog({
                   <Sparkles className="h-4 w-4 text-primary" /> Kaalu assist
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[360px] glass-strong border-white/10">
+              <PopoverContent className="w-[360px] glass-strong border-border">
                 <div className="space-y-3">
                   <div className="text-xs text-muted-foreground">
                     Describe what to write, or use a quick action on the existing text.

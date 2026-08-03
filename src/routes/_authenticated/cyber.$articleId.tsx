@@ -74,17 +74,17 @@ function ArticleDetail() {
           <div className="mt-1.5 text-[11px] text-muted-foreground">Opens the original publisher ({data.article.source}) in a new tab.</div>
 
 
-          <section className="mt-6 glass rounded-xl p-5 border border-white/5">
+          <section className="mt-6 glass rounded-xl p-5 border border-border">
             <h2 className="text-sm uppercase tracking-widest text-muted-foreground mb-2">AI Summary</h2>
             <p className="text-sm leading-relaxed">{data.detail.summary}</p>
           </section>
 
           <section className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="glass rounded-xl p-4 border border-white/5">
+            <div className="glass rounded-xl p-4 border border-border">
               <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Risk Assessment</h3>
               <p className="text-sm">{data.detail.risk}</p>
             </div>
-            <div className="glass rounded-xl p-4 border border-white/5">
+            <div className="glass rounded-xl p-4 border border-border">
               <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Recommended Mitigation</h3>
               <ul className="text-sm list-disc pl-4 space-y-1">
                 {data.detail.mitigation.map((m, i) => <li key={i}>{m}</li>)}
@@ -107,7 +107,7 @@ function ArticleDetail() {
                     key={r.id}
                     to="/cyber/$articleId"
                     params={{ articleId: r.id }}
-                    className="glass rounded-xl p-3 border border-white/5 hover:border-primary/40 transition block"
+                    className="glass rounded-xl p-3 border border-border hover:border-primary/40 transition block"
                   >
                     <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
                       <span className={`px-1.5 rounded border ${sevColor[r.severity]}`}>{r.severity}</span>
@@ -120,7 +120,7 @@ function ArticleDetail() {
             </section>
           )}
 
-          <nav className="mt-8 flex items-center justify-between border-t border-white/5 pt-4">
+          <nav className="mt-8 flex items-center justify-between border-t border-border pt-4">
 
             {prev ? (
               <Button variant="ghost" onClick={() => navigate({ to: "/cyber/$articleId", params: { articleId: prev.id } })}>
@@ -144,7 +144,7 @@ function ArticleDetail() {
 
 function InfoList({ label, items, linkTo }: { label: string; items: string[]; linkTo?: (v: string) => string }) {
   return (
-    <div className="glass rounded-xl p-4 border border-white/5">
+    <div className="glass rounded-xl p-4 border border-border">
       <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{label}</h3>
       {items.length === 0 ? (
         <div className="text-xs text-muted-foreground">—</div>
@@ -152,9 +152,9 @@ function InfoList({ label, items, linkTo }: { label: string; items: string[]; li
         <div className="flex flex-wrap gap-1.5">
           {items.map((v) => (
             linkTo ? (
-              <a key={v} href={linkTo(v)} target="_blank" rel="noreferrer" className="text-[11px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 hover:text-primary">{v}</a>
+              <a key={v} href={linkTo(v)} target="_blank" rel="noreferrer" className="text-[11px] px-1.5 py-0.5 rounded bg-muted/50 border border-border hover:text-primary">{v}</a>
             ) : (
-              <span key={v} className="text-[11px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">{v}</span>
+              <span key={v} className="text-[11px] px-1.5 py-0.5 rounded bg-muted/50 border border-border">{v}</span>
             )
           ))}
         </div>

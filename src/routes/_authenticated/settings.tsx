@@ -51,7 +51,7 @@ function SettingsPage() {
         <h1 className="text-2xl font-semibold">Settings</h1>
         <p className="text-sm text-muted-foreground">Manage your account and integrations.</p>
       </div>
-      <Card className="glass-strong border-white/10">
+      <Card className="glass-strong border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-primary" /> Microsoft Outlook

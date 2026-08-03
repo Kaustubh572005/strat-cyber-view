@@ -64,7 +64,7 @@ function NotificationsPage() {
           <button
             onClick={() => dismissAllMut.mutate()}
             disabled={dismissAllMut.isPending}
-            className="text-xs text-muted-foreground hover:text-primary border border-white/10 rounded-full px-3 py-1.5 hover:bg-white/5"
+            className="text-xs text-muted-foreground hover:text-primary border border-border rounded-full px-3 py-1.5 hover:bg-muted"
           >
             Dismiss all
           </button>
@@ -74,7 +74,7 @@ function NotificationsPage() {
       {q.isLoading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : items.length === 0 ? (
-        <div className="glass rounded-xl border border-white/5 p-12 text-center text-sm text-muted-foreground">
+        <div className="glass rounded-xl border border-border p-12 text-center text-sm text-muted-foreground">
           <Bell className="h-6 w-6 text-muted-foreground/50 mx-auto mb-2" />
           No notifications yet. New items will appear here as syncs run.
         </div>

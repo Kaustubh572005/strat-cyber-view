@@ -20,7 +20,6 @@ import {
   LogOut,
   Trash2,
   Pencil,
-  Sparkles,
   History,
   LayoutDashboard,
   Package,
@@ -41,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { UtiLogo } from "./UtiLogo";
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -99,20 +99,20 @@ export function Sidebar() {
     (location.pathname.match(/^\/voice\/([^/]+)/) || [])[1] || null;
 
   return (
-    <aside className="w-72 shrink-0 h-screen sticky top-0 glass-strong border-r border-white/5 flex flex-col">
-      <div className="p-4 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full neon-ring flex items-center justify-center">
-          <Sparkles className="h-4 w-4 text-primary" />
-        </div>
-        <div>
-          <div className="font-semibold neon-text tracking-wide">Kaalu</div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Executive AI
+    <aside className="hidden md:flex w-64 shrink-0 h-screen sticky top-0 bg-sidebar border-r border-sidebar-border flex-col">
+      <div className="px-4 py-3.5 border-b border-sidebar-border">
+        <UtiLogo className="h-7" />
+        <div className="mt-2.5">
+          <div className="text-sm font-semibold tracking-tight text-primary">Kaalu AI</div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            Cyber Intelligence
           </div>
         </div>
       </div>
 
-      <nav className="px-3 space-y-1">
+
+
+      <nav className="px-3 py-3 space-y-1 overflow-y-auto">
         <NavItem
           active={isDashboard}
           onClick={() => navigate({ to: "/dashboard" })}
@@ -178,7 +178,7 @@ export function Sidebar() {
           href="https://sbom-workbench.lovable.app/"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition text-muted-foreground hover:text-foreground hover:bg-white/5"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           <Package className="h-4 w-4" />
           <span className="font-medium">SBOM Workbench</span>
@@ -223,7 +223,7 @@ export function Sidebar() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search"
-              className="h-8 pl-8 text-sm bg-white/5 border-white/10"
+              className="h-8 pl-8 text-sm"
             />
           </div>
           <ScrollArea className="flex-1 -mx-1">
@@ -267,7 +267,7 @@ export function Sidebar() {
 
       {!isVoiceActive && <div className="flex-1" />}
 
-      <div className="p-3 border-t border-white/5 flex items-center gap-2">
+      <div className="p-3 border-t border-border flex items-center gap-2">
         <Button
           variant="ghost"
           size="sm"
@@ -302,8 +302,8 @@ function NavItem({
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
         active
-          ? "bg-primary/15 text-primary neon-ring"
-          : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+          ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+          : "text-foreground/70 hover:text-primary hover:bg-sidebar-accent"
       }`}
     >
       {icon}
@@ -353,7 +353,7 @@ function ConvRow({
   return (
     <div
       className={`group flex items-center rounded-md ${
-        active ? "bg-white/10" : "hover:bg-white/5"
+        active ? "bg-sidebar-accent text-primary" : "hover:bg-sidebar-accent"
       }`}
     >
       <button
@@ -366,7 +366,7 @@ function ConvRow({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="opacity-0 group-hover:opacity-100 mr-1 p-1 rounded hover:bg-white/10"
+            className="opacity-0 group-hover:opacity-100 mr-1 p-1 rounded hover:bg-muted"
             aria-label="More"
           >
             <Pencil className="h-3.5 w-3.5" />
