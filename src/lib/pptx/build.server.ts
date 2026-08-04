@@ -247,7 +247,7 @@ function slideXml(ctx: Ctx, slide: DeckPlan["slides"][number], _index: number, _
     );
     if (slide.subtitle)
       shapes.push(
-        textBox(ctx, 0.9, 2.5, wIn - 1.8, 0.7, para(slide.subtitle, { size: 18, color: "DCE6F5" })),
+        textBox(ctx, 0.9, 2.1, wIn - 1.8, 0.6, para(slide.subtitle, { size: 18, color: "DCE6F5" })),
       );
     const first = slide.blocks[0];
     if (first && first.kind === "bullets")
@@ -255,7 +255,8 @@ function slideXml(ctx: Ctx, slide: DeckPlan["slides"][number], _index: number, _
         textBox(
           ctx,
           0.9,
-          slide.subtitle ? 3.25 : 2.6,
+          3.5,
+
           wIn - 1.8,
           1.2,
           first.items
