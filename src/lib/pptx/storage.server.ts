@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const BUILTIN_TEMPLATE_ID = "builtin-uti-amc";
+export { BUILTIN_TEMPLATE_ID } from "./constants";
+import { BUILTIN_TEMPLATE_ID } from "./constants";
 const BUILTIN_PATH = "system/uti-amc-format.pptx";
 
 export function toBase64(bytes: Uint8Array) {
