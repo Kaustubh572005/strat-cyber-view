@@ -202,7 +202,27 @@ function renderBlock(ctx: Ctx, b: Block, x: number, y: number, w: number, h: num
   }
 }
 
-function slideXml(ctx: Ctx, slide: DeckPlan["slides"][number], index: number, total: number) {
+function naturalHeight(b: Block): number {
+  switch (b.kind) {
+    case "bullets":
+      return Math.min(3.4, 0.35 + b.items.slice(0, 8).length * 0.42);
+    case "table":
+      return 0.5 + Math.min(b.rows.length, 8) * 0.4;
+    case "kpis":
+      return 1.7;
+    case "timeline":
+      return 1.6;
+    case "chart":
+      return 3.1;
+    case "twoCol":
+      return Math.min(3.4, 0.8 + Math.max(b.left.items.length, b.right.items.length) * 0.36);
+    default:
+      return 1.2;
+  }
+}
+
+function slideXml(ctx: Ctx, slide: DeckPlan["slides"][number], _index: number, _total: number) {
+
   const c = ctx.bp.colors;
   const wIn = ctx.W;
   const hIn = ctx.H;
