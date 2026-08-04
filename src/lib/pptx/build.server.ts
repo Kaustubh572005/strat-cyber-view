@@ -278,8 +278,9 @@ function slideXml(ctx: Ctx, slide: DeckPlan["slides"][number], _index: number, _
     const totalNatural = natural.reduce((a, b) => a + b, 0) + 0.25 * Math.max(0, blocks.length - 1);
     const available = bottom - y;
     const scale = totalNatural > available ? available / totalNatural : 1;
-    const slack = totalNatural < available ? (available - totalNatural) / (blocks.length + 1) : 0;
-    y += slack;
+    const rawSlack = totalNatural < available ? (available - totalNatural) / (blocks.length + 1) : 0;
+    const slack = Math.min(rawSlack, 0.3); // keep content top-anchored, no huge voids
+
     blocks.forEach((b, i) => {
       const h = natural[i]! * scale;
       if (bottom - y < 0.5) return;
