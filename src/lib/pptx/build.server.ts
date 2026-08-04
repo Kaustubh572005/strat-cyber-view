@@ -230,32 +230,31 @@ function slideXml(ctx: Ctx, slide: DeckPlan["slides"][number], index: number, to
       textBox(ctx, 1.2, hIn / 2 - 0.7, wIn - 2.4, 1.4, para(slide.title, { size: 32, bold: true, color: c.accent1 }), "ctr"),
     );
   } else {
-    shapes.push(textBox(ctx, 0.6, 0.45, wIn - 1.2, 0.8, para(slide.title, { size: 26, bold: true, color: c.accent1 })));
-    shapes.push(rect(ctx, 0.62, 1.22, 1.4, 0.045, c.accent4));
+    shapes.push(textBox(ctx, 0.6, 0.78, wIn - 1.2, 0.7, para(slide.title, { size: 26, bold: true, color: c.accent1 })));
+    shapes.push(rect(ctx, 0.62, 1.5, 1.4, 0.045, c.accent4));
     if (slide.subtitle)
-      shapes.push(textBox(ctx, 0.62, 1.32, wIn - 1.4, 0.4, para(slide.subtitle, { size: 13, color: "5A6373" })));
+      shapes.push(textBox(ctx, 0.62, 1.6, wIn - 1.4, 0.4, para(slide.subtitle, { size: 13, color: "5A6373" })));
 
-    let y = slide.subtitle ? 1.85 : 1.55;
-    const bottom = hIn - 0.85;
+    let y = slide.subtitle ? 2.1 : 1.8;
+    const bottom = hIn - 0.9;
     const blocks = slide.blocks.slice(0, 3);
-    for (const b of blocks) {
-      const remaining = bottom - y;
-      if (remaining < 0.6) break;
-      const share = remaining / Math.max(1, blocks.length - blocks.indexOf(b));
-      const h = Math.max(0.7, Math.min(remaining, share));
-      shapes.push(renderBlock(ctx, b, 0.62, y, wIn - 1.24, h));
-      y += h + 0.25;
-    }
+    const natural = blocks.map((b) => naturalHeight(b));
+    const totalNatural = natural.reduce((a, b) => a + b, 0) + 0.25 * Math.max(0, blocks.length - 1);
+    const available = bottom - y;
+    const scale = totalNatural > available ? available / totalNatural : 1;
+    const slack = totalNatural < available ? (available - totalNatural) / (blocks.length + 1) : 0;
+    y += slack;
+    blocks.forEach((b, i) => {
+      const h = natural[i]! * scale;
+      if (bottom - y < 0.5) return;
+      shapes.push(renderBlock(ctx, b, 0.62, y, wIn - 1.24, Math.min(h, bottom - y)));
+      y += h + 0.25 * scale + slack;
+    });
   }
 
-  if (ctx.bp.footerText) {
-    shapes.push(
-      textBox(ctx, 0.6, hIn - 0.5, wIn - 2, 0.3, para(ctx.bp.footerText, { size: 9, color: "8A93A3" })),
-    );
-  }
-  shapes.push(
-    textBox(ctx, wIn - 1.3, hIn - 0.5, 0.8, 0.3, para(`${index + 1}/${total}`, { size: 9, color: "8A93A3", align: "r" })),
-  );
+  // Classification footer and slide number come from the template master, so
+  // nothing is drawn here to avoid duplicating corporate furniture.
+
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${shapes.join("")}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
