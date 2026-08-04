@@ -231,28 +231,41 @@ function slideXml(ctx: Ctx, slide: DeckPlan["slides"][number], _index: number, _
   const hIn = ctx.H;
   const shapes: string[] = [];
 
-  if (slide.kind === "title") {
+  if (slide.kind === "title" || slide.kind === "divider" || slide.kind === "closing") {
+    // These template layouts use a dark branded background: keep the top band
+    // clear and render type in white for contrast.
     shapes.push(
       textBox(
         ctx,
         0.9,
-        hIn / 2 - 1.2,
+        1.25,
         wIn - 1.8,
-        1.5,
-        para(slide.title, { size: 40, bold: true, color: c.accent1 }),
+        1.2,
+        para(slide.title, { size: slide.kind === "divider" ? 32 : 38, bold: true, color: "FFFFFF" }),
         "ctr",
       ),
     );
     if (slide.subtitle)
       shapes.push(
-        textBox(ctx, 0.9, hIn / 2 + 0.35, wIn - 1.8, 0.9, para(slide.subtitle, { size: 18, color: "5A6373" })),
+        textBox(ctx, 0.9, 2.5, wIn - 1.8, 0.7, para(slide.subtitle, { size: 18, color: "DCE6F5" })),
       );
-  } else if (slide.kind === "divider") {
-    shapes.push(rect(ctx, 0.9, hIn / 2 - 0.6, 0.12, 1.2, c.accent4));
-    shapes.push(
-      textBox(ctx, 1.2, hIn / 2 - 0.7, wIn - 2.4, 1.4, para(slide.title, { size: 32, bold: true, color: c.accent1 }), "ctr"),
-    );
+    const first = slide.blocks[0];
+    if (first && first.kind === "bullets")
+      shapes.push(
+        textBox(
+          ctx,
+          0.9,
+          slide.subtitle ? 3.25 : 2.6,
+          wIn - 1.8,
+          1.2,
+          first.items
+            .slice(0, 3)
+            .map((t) => para(t, { size: 16, color: "DCE6F5" }))
+            .join(""),
+        ),
+      );
   } else {
+
     shapes.push(textBox(ctx, 0.6, 0.78, wIn - 1.2, 0.7, para(slide.title, { size: 26, bold: true, color: c.accent1 })));
     shapes.push(rect(ctx, 0.62, 1.5, 1.4, 0.045, c.accent4));
     if (slide.subtitle)
