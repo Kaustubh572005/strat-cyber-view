@@ -155,13 +155,16 @@ function renderBlock(ctx: Ctx, b: Block, x: number, y: number, w: number, h: num
       const head = b.chartTitle
         ? textBox(ctx, x, y, w, 0.3, para(b.chartTitle, { size: 12, bold: true, color: c.accent1 }))
         : "";
-      const baseY = y + (b.chartTitle ? 0.35 : 0) + plotH;
+      const topPad = (b.chartTitle ? 0.4 : 0) + 0.3; // room for value labels
+      const barZone = Math.max(0.5, plotH - topPad);
+      const baseY = y + topPad + barZone;
       return (
         head +
         rect(ctx, x, baseY, w, 0.02, "D8DEE9") +
         series
           .map((s, i) => {
-            const bh = Math.max(0.12, (Math.abs(s.value) / max) * plotH);
+            const bh = Math.max(0.12, (Math.abs(s.value) / max) * barZone);
+
             const bx = x + i * (bw + gap);
             return (
               rect(ctx, bx, baseY - bh, bw, bh, palette[i % palette.length]!) +
