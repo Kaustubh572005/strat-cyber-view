@@ -87,7 +87,7 @@ export function Sidebar() {
   const isNotifs = location.pathname.startsWith("/notifications");
   const isVoiceActive =
     location.pathname.startsWith("/voice") ||
-    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isCertIn && !isNse && !isUti && !isNotifs);
+    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isSebiIntel && !isCertIn && !isNse && !isUti && !isNotifs);
 
 
   async function signOut() {
