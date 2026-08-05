@@ -470,6 +470,126 @@ export type Database = {
         }
         Relationships: []
       }
+      sebi_orders: {
+        Row: {
+          ai_summary: string | null
+          category: string
+          created_at: string
+          entity_name: string | null
+          external_id: string
+          id: string
+          order_date: string | null
+          pdf_url: string | null
+          raw: Json | null
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          category: string
+          created_at?: string
+          entity_name?: string | null
+          external_id: string
+          id?: string
+          order_date?: string | null
+          pdf_url?: string | null
+          raw?: Json | null
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          ai_summary?: string | null
+          category?: string
+          created_at?: string
+          entity_name?: string | null
+          external_id?: string
+          id?: string
+          order_date?: string | null
+          pdf_url?: string | null
+          raw?: Json | null
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      sebi_public_issues: {
+        Row: {
+          ai_summary: string | null
+          company_name: string | null
+          created_at: string
+          doc_type: string
+          external_id: string
+          filing_date: string | null
+          id: string
+          pdf_url: string | null
+          raw: Json | null
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          company_name?: string | null
+          created_at?: string
+          doc_type: string
+          external_id: string
+          filing_date?: string | null
+          id?: string
+          pdf_url?: string | null
+          raw?: Json | null
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          ai_summary?: string | null
+          company_name?: string | null
+          created_at?: string
+          doc_type?: string
+          external_id?: string
+          filing_date?: string | null
+          id?: string
+          pdf_url?: string | null
+          raw?: Json | null
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      sebi_repo_sync: {
+        Row: {
+          display_name: string
+          last_added_count: number
+          last_error: string | null
+          last_status: string | null
+          last_synced_at: string | null
+          repo_key: string
+          updated_at: string
+        }
+        Insert: {
+          display_name: string
+          last_added_count?: number
+          last_error?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          repo_key: string
+          updated_at?: string
+        }
+        Update: {
+          display_name?: string
+          last_added_count?: number
+          last_error?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          repo_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sync_runs: {
         Row: {
           added_count: number
