@@ -395,8 +395,13 @@ export async function runSebiIntelSync(
       }
     }
 
+    // Bounded backfill: add AI summaries (and official PDF links) to older
+    // records that were stored before enrichment succeeded. Never deletes.
+    await backfillEnrichment(supa, repo);
+
     await markSync(supa, repoKey, { last_status: "ok", last_added_count: added });
     return { added, total };
+
   } catch (e) {
     const msg = (e as Error).message;
     console.error("[sebi-intel]", repo, msg);
