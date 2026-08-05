@@ -29,6 +29,7 @@ import {
   FileText,
   Building2,
   Bell,
+  Scale,
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
@@ -78,14 +79,15 @@ export function Sidebar() {
   const isDashboard = location.pathname === "/dashboard" || location.pathname === "/";
   const isCyber = location.pathname.startsWith("/cyber");
   const isPresentations = location.pathname.startsWith("/presentations");
-  const isSebi = location.pathname.startsWith("/sebi");
+  const isSebiIntel = location.pathname.startsWith("/sebi-intel");
+  const isSebi = location.pathname.startsWith("/sebi") && !isSebiIntel;
   const isCertIn = location.pathname.startsWith("/cert-in");
   const isNse = location.pathname.startsWith("/nse");
   const isUti = location.pathname.startsWith("/uti-amc");
   const isNotifs = location.pathname.startsWith("/notifications");
   const isVoiceActive =
     location.pathname.startsWith("/voice") ||
-    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isCertIn && !isNse && !isUti && !isNotifs);
+    (!isMailActive && !isSettings && !isDashboard && !isCyber && !isPresentations && !isSebi && !isSebiIntel && !isCertIn && !isNse && !isUti && !isNotifs);
 
 
   async function signOut() {
@@ -137,6 +139,13 @@ export function Sidebar() {
           icon={<FileText className="h-4 w-4" />}
           label="SEBI Legal"
         />
+        <NavItem
+          active={isSebiIntel}
+          onClick={() => navigate({ to: "/sebi-intel" })}
+          icon={<Scale className="h-4 w-4" />}
+          label="SEBI Intelligence"
+        />
+
         <NavItem
           active={isCertIn}
           onClick={() => navigate({ to: "/cert-in" })}
