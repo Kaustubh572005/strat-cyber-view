@@ -327,7 +327,7 @@ export async function runSebiIntelSync(
         if (error) throw new Error(error.message);
         const ins = inserted ?? [];
         added += ins.length;
-        ins.forEach((row) => existing.add(payload.find((p) => p.title === row.title)?.external_id ?? ""));
+        for (const p of payload) existing.add(p.external_id);
         for (const row of ins.slice(0, 20)) {
           const s = await summarize(
             `SEBI Public Issue filing (${row.doc_type}) by ${row.company_name ?? "issuer"}: ${row.title}`,
