@@ -220,6 +220,11 @@ function DashboardPage() {
 
       <NseSection items={nse.slice(0, 8)} loading={nseQ.isLoading} isNew={isNew} />
 
+      <SebiPublicIssuesSection />
+
+      <SebiOrdersSection />
+
+
       <FeedSection
         icon={ShieldAlert}
         title="UTI AMC Cyber Watch"
