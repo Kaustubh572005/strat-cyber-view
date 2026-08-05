@@ -138,6 +138,13 @@ export function Sidebar() {
           label="SEBI Legal"
         />
         <NavItem
+          active={isSebiIntel}
+          onClick={() => navigate({ to: "/sebi-intel" })}
+          icon={<Scale className="h-4 w-4" />}
+          label="SEBI Intelligence"
+        />
+
+        <NavItem
           active={isCertIn}
           onClick={() => navigate({ to: "/cert-in" })}
           icon={<ShieldAlert className="h-4 w-4" />}
