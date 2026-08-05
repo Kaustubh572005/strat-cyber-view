@@ -29,6 +29,7 @@ import {
   FileText,
   Building2,
   Bell,
+  Scale,
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
@@ -78,7 +79,8 @@ export function Sidebar() {
   const isDashboard = location.pathname === "/dashboard" || location.pathname === "/";
   const isCyber = location.pathname.startsWith("/cyber");
   const isPresentations = location.pathname.startsWith("/presentations");
-  const isSebi = location.pathname.startsWith("/sebi");
+  const isSebiIntel = location.pathname.startsWith("/sebi-intel");
+  const isSebi = location.pathname.startsWith("/sebi") && !isSebiIntel;
   const isCertIn = location.pathname.startsWith("/cert-in");
   const isNse = location.pathname.startsWith("/nse");
   const isUti = location.pathname.startsWith("/uti-amc");
