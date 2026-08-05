@@ -11,6 +11,7 @@ import {
   type SourceStatus,
 } from "@/lib/feeds.functions";
 import { listNotifications } from "@/lib/notifications.functions";
+import { listOrders, listPublicIssues } from "@/lib/sebi-intel.functions";
 import {
   ShieldAlert,
   FileText,
@@ -22,6 +23,8 @@ import {
   RefreshCw,
   Bell,
   ExternalLink,
+  Scale,
+  Download,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -638,6 +641,182 @@ function NseCard({ row, isNew }: { row: NseDisclosureRow; isNew?: boolean }) {
             Attachment <ExternalLink className="h-3 w-3" />
           </a>
         )}
+      </div>
+    </div>
+  );
+}
+
+
+function SebiPublicIssuesSection() {
+  const getPi = useServerFn(listPublicIssues);
+  const q = useQuery({
+    queryKey: ["dashboard-sebi-public-issues"],
+    queryFn: () => getPi({ data: { limit: 5 } }),
+    refetchInterval: POLL_MS,
+    staleTime: 60_000,
+  });
+  const rows = q.data ?? [];
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  return (
+    <section className="glass rounded-2xl p-5 border border-border">
+      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+        <div className="flex items-start gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+            <FileText className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">SEBI Public Issues</h2>
+            <p className="text-xs text-muted-foreground">
+              Latest offer document filings from the official SEBI Public Issues repository
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/sebi-intel"
+          className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
+        >
+          View all <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      {q.isLoading && rows.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-28 bg-muted/50 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="text-sm text-muted-foreground py-8 text-center">
+          No filings indexed yet. Open SEBI Intelligence and refresh the repository.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {rows.map((r) => (
+            <IntelCard
+              key={r.id}
+              tag={r.doc_type}
+              entity={r.company_name}
+              title={r.title}
+              date={r.filing_date}
+              summary={r.ai_summary}
+              url={r.url}
+              pdf={r.pdf_url}
+              isNew={new Date(r.created_at).getTime() > cutoff}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SebiOrdersSection() {
+  const getOrd = useServerFn(listOrders);
+  const q = useQuery({
+    queryKey: ["dashboard-sebi-orders"],
+    queryFn: () => getOrd({ data: { limit: 5 } }),
+    refetchInterval: POLL_MS,
+    staleTime: 60_000,
+  });
+  const rows = q.data ?? [];
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  return (
+    <section className="glass rounded-2xl p-5 border border-border">
+      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+        <div className="flex items-start gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+            <Scale className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">Latest SEBI Orders</h2>
+            <p className="text-xs text-muted-foreground">
+              Most recent orders across all official SEBI enforcement categories
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/sebi-intel"
+          className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
+        >
+          View all <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      {q.isLoading && rows.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-28 bg-muted/50 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="text-sm text-muted-foreground py-8 text-center">
+          No orders indexed yet. Open SEBI Intelligence and refresh the repository.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {rows.map((r) => (
+            <IntelCard
+              key={r.id}
+              tag={r.category}
+              entity={r.entity_name}
+              title={r.title}
+              date={r.order_date}
+              summary={r.ai_summary}
+              url={r.url}
+              pdf={r.pdf_url}
+              isNew={new Date(r.created_at).getTime() > cutoff}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function IntelCard({
+  tag,
+  entity,
+  title,
+  date,
+  summary,
+  url,
+  pdf,
+  isNew,
+}: {
+  tag: string;
+  entity: string | null;
+  title: string;
+  date: string | null;
+  summary: string | null;
+  url: string;
+  pdf: string | null;
+  isNew?: boolean;
+}) {
+  return (
+    <div className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition">
+      <div className="flex items-center gap-1.5 flex-wrap mb-2">
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted border border-border uppercase tracking-widest text-muted-foreground">
+          {tag}
+        </span>
+        {isNew && <NewBadge />}
+      </div>
+      {entity && <div className="text-xs font-medium text-foreground/80 mb-1">{entity}</div>}
+      <div className="font-medium text-sm leading-snug line-clamp-2">{title}</div>
+      {summary && <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{summary}</p>}
+      <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>
+          {date
+            ? new Date(date).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+            : "—"}
+        </span>
+        <span className="flex items-center gap-2">
+          <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-primary">
+            Official <ExternalLink className="h-3 w-3" />
+          </a>
+          {pdf && (
+            <a href={pdf} target="_blank" rel="noreferrer" download className="inline-flex items-center gap-1 hover:text-primary">
+              PDF <Download className="h-3 w-3" />
+            </a>
+          )}
+        </span>
       </div>
     </div>
   );
