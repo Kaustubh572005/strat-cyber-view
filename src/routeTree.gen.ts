@@ -17,6 +17,7 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/voice'
 import { Route as AuthenticatedUtiAmcRouteImport } from './routes/_authenticated/uti-amc'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSebiIntelRouteImport } from './routes/_authenticated/sebi-intel'
 import { Route as AuthenticatedSebiRouteImport } from './routes/_authenticated/sebi'
 import { Route as AuthenticatedPresentationsRouteImport } from './routes/_authenticated/presentations'
 import { Route as AuthenticatedNseRouteImport } from './routes/_authenticated/nse'
@@ -78,6 +79,11 @@ const AuthenticatedUtiAmcRoute = AuthenticatedUtiAmcRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSebiIntelRoute = AuthenticatedSebiIntelRouteImport.update({
+  id: '/sebi-intel',
+  path: '/sebi-intel',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSebiRoute = AuthenticatedSebiRouteImport.update({
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/nse': typeof AuthenticatedNseRoute
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
+  '/sebi-intel': typeof AuthenticatedSebiIntelRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/uti-amc': typeof AuthenticatedUtiAmcRoute
   '/voice': typeof AuthenticatedVoiceRouteWithChildren
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/nse': typeof AuthenticatedNseRoute
   '/presentations': typeof AuthenticatedPresentationsRoute
   '/sebi': typeof AuthenticatedSebiRoute
+  '/sebi-intel': typeof AuthenticatedSebiIntelRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/uti-amc': typeof AuthenticatedUtiAmcRoute
   '/voice': typeof AuthenticatedVoiceRouteWithChildren
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/_authenticated/nse': typeof AuthenticatedNseRoute
   '/_authenticated/presentations': typeof AuthenticatedPresentationsRoute
   '/_authenticated/sebi': typeof AuthenticatedSebiRoute
+  '/_authenticated/sebi-intel': typeof AuthenticatedSebiIntelRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/uti-amc': typeof AuthenticatedUtiAmcRoute
   '/_authenticated/voice': typeof AuthenticatedVoiceRouteWithChildren
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/nse'
     | '/presentations'
     | '/sebi'
+    | '/sebi-intel'
     | '/settings'
     | '/uti-amc'
     | '/voice'
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/nse'
     | '/presentations'
     | '/sebi'
+    | '/sebi-intel'
     | '/settings'
     | '/uti-amc'
     | '/voice'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/_authenticated/nse'
     | '/_authenticated/presentations'
     | '/_authenticated/sebi'
+    | '/_authenticated/sebi-intel'
     | '/_authenticated/settings'
     | '/_authenticated/uti-amc'
     | '/_authenticated/voice'
@@ -478,6 +490,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sebi-intel': {
+      id: '/_authenticated/sebi-intel'
+      path: '/sebi-intel'
+      fullPath: '/sebi-intel'
+      preLoaderRoute: typeof AuthenticatedSebiIntelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/sebi': {
@@ -675,6 +694,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNseRoute: typeof AuthenticatedNseRoute
   AuthenticatedPresentationsRoute: typeof AuthenticatedPresentationsRoute
   AuthenticatedSebiRoute: typeof AuthenticatedSebiRoute
+  AuthenticatedSebiIntelRoute: typeof AuthenticatedSebiIntelRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedUtiAmcRoute: typeof AuthenticatedUtiAmcRoute
   AuthenticatedVoiceRoute: typeof AuthenticatedVoiceRouteWithChildren
@@ -689,6 +709,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNseRoute: AuthenticatedNseRoute,
   AuthenticatedPresentationsRoute: AuthenticatedPresentationsRoute,
   AuthenticatedSebiRoute: AuthenticatedSebiRoute,
+  AuthenticatedSebiIntelRoute: AuthenticatedSebiIntelRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedUtiAmcRoute: AuthenticatedUtiAmcRoute,
   AuthenticatedVoiceRoute: AuthenticatedVoiceRouteWithChildren,
