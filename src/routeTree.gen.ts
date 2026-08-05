@@ -39,6 +39,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as ApiPublicSyncSourceRouteImport } from './routes/api/public/sync/$source'
 import { Route as ApiAuthMsStartRouteImport } from './routes/api/auth/ms/start'
 import { Route as ApiAuthMsCallbackRouteImport } from './routes/api/auth/ms/callback'
+import { Route as ApiPublicSyncSebiRepoRouteImport } from './routes/api/public/sync/sebi/$repo'
 
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
@@ -196,6 +197,11 @@ const ApiAuthMsCallbackRoute = ApiAuthMsCallbackRouteImport.update({
   path: '/api/auth/ms/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncSebiRepoRoute = ApiPublicSyncSebiRepoRouteImport.update({
+  id: '/api/public/sync/sebi/$repo',
+  path: '/api/public/sync/sebi/$repo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
   '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
+  '/api/public/sync/sebi/$repo': typeof ApiPublicSyncSebiRepoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
   '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
+  '/api/public/sync/sebi/$repo': typeof ApiPublicSyncSebiRepoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/api/auth/ms/callback': typeof ApiAuthMsCallbackRoute
   '/api/auth/ms/start': typeof ApiAuthMsStartRoute
   '/api/public/sync/$source': typeof ApiPublicSyncSourceRoute
+  '/api/public/sync/sebi/$repo': typeof ApiPublicSyncSebiRepoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -324,6 +333,7 @@ export interface FileRouteTypes {
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
     | '/api/public/sync/$source'
+    | '/api/public/sync/sebi/$repo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -355,6 +365,7 @@ export interface FileRouteTypes {
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
     | '/api/public/sync/$source'
+    | '/api/public/sync/sebi/$repo'
   id:
     | '__root__'
     | '/'
@@ -387,6 +398,7 @@ export interface FileRouteTypes {
     | '/api/auth/ms/callback'
     | '/api/auth/ms/start'
     | '/api/public/sync/$source'
+    | '/api/public/sync/sebi/$repo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -407,6 +419,7 @@ export interface RootRouteChildren {
   ApiAuthMsCallbackRoute: typeof ApiAuthMsCallbackRoute
   ApiAuthMsStartRoute: typeof ApiAuthMsStartRoute
   ApiPublicSyncSourceRoute: typeof ApiPublicSyncSourceRoute
+  ApiPublicSyncSebiRepoRoute: typeof ApiPublicSyncSebiRepoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -621,6 +634,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthMsCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/sebi/$repo': {
+      id: '/api/public/sync/sebi/$repo'
+      path: '/api/public/sync/sebi/$repo'
+      fullPath: '/api/public/sync/sebi/$repo'
+      preLoaderRoute: typeof ApiPublicSyncSebiRepoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -696,6 +716,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthMsCallbackRoute: ApiAuthMsCallbackRoute,
   ApiAuthMsStartRoute: ApiAuthMsStartRoute,
   ApiPublicSyncSourceRoute: ApiPublicSyncSourceRoute,
+  ApiPublicSyncSebiRepoRoute: ApiPublicSyncSebiRepoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
