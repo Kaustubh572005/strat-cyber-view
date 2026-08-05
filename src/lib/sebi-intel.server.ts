@@ -409,3 +409,47 @@ export async function runSebiIntelSync(
     throw e;
   }
 }
+
+// Fetch an official detail page and extract the primary PDF attachment.
+async function findPdf(url: string): Promise<string | null> {
+  if (!/\.html?$/i.test(url)) return null;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        Referer: "https://www.sebi.gov.in/",
+      },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const m = /(?:sebi_data|attachdocs|commondocs)[^"'?<>\s]*\.pdf/i.exec(html);
+    return m ? absolute(`/${m[0].replace(/^\/+/, "")}`) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function backfillEnrichment(supa: ReturnType<typeof sebiIntelAdmin>, repo: SebiIntelRepo) {
+  const table = repo === "public-issues" ? "sebi_public_issues" : "sebi_orders";
+  const label = repo === "public-issues" ? "Public Issue filing" : "order";
+  const { data: rows } = await supa
+    .from(table)
+    .select("id, title, url, pdf_url, ai_summary")
+    .is("ai_summary", null)
+    .order("created_at", { ascending: false })
+    .limit(25);
+  for (const row of rows ?? []) {
+    const patch: { ai_summary?: string; pdf_url?: string } = {};
+    const summary = await summarize(`SEBI ${label}: ${row.title}`);
+    if (summary) patch.ai_summary = summary;
+    if (!row.pdf_url) {
+      const pdf = await findPdf(row.url);
+      if (pdf) patch.pdf_url = pdf;
+    }
+    if (Object.keys(patch).length > 0) {
+      await supa.from(table).update(patch).eq("id", row.id);
+    }
+  }
+}
