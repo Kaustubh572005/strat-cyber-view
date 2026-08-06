@@ -26,7 +26,6 @@ import {
   ShieldAlert,
   Shield,
   Presentation,
-  FileText,
   Building2,
   Bell,
   Scale,
@@ -134,17 +133,12 @@ export function Sidebar() {
           label="Cyber Intelligence"
         />
         <NavItem
-          active={isSebi}
+          active={isSebi || isSebiIntel}
           onClick={() => navigate({ to: "/sebi" })}
-          icon={<FileText className="h-4 w-4" />}
-          label="SEBI Legal"
-        />
-        <NavItem
-          active={isSebiIntel}
-          onClick={() => navigate({ to: "/sebi-intel" })}
           icon={<Scale className="h-4 w-4" />}
-          label="SEBI Intelligence"
+          label="SEBI"
         />
+
 
         <NavItem
           active={isCertIn}

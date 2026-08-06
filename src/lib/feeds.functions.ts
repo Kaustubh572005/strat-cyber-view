@@ -164,6 +164,7 @@ export const refreshSource = createServerFn({ method: "POST" })
         source_key: z.enum([
           "sebi-whats-new",
           "cert-in",
+          "cert-in-vuln",
           "nse-cyber",
           "cyber-news",
           "ai-news",
@@ -177,7 +178,15 @@ export const refreshSource = createServerFn({ method: "POST" })
     const { runSync } = await import("@/lib/sync-runner.server");
     const sources =
       data.source_key === "all"
-        ? (["sebi-whats-new", "cert-in", "nse-cyber", "cyber-news", "ai-news", "uti-amc-cyber"] as const)
+        ? ([
+            "sebi-whats-new",
+            "cert-in",
+            "cert-in-vuln",
+            "nse-cyber",
+            "cyber-news",
+            "ai-news",
+            "uti-amc-cyber",
+          ] as const)
         : [data.source_key];
     const results: Array<{ source: string; added: number; total: number; error?: string }> = [];
     for (const s of sources) {
