@@ -198,10 +198,10 @@ function DashboardPage() {
 
       <FeedSection
         icon={FileText}
-        title="SEBI Legal Updates"
+        title="SEBI Updates"
         subtitle="Circulars, Guidelines, Advisory & Regulations from the official SEBI legal repository"
         viewAllTo="/sebi"
-        viewAllLabel="View All SEBI Legal Updates"
+        viewAllLabel="View All SEBI Updates"
         sourceKey="sebi-whats-new"
         items={sebi.slice(0, 5)}
         loading={feedQ.isLoading}
@@ -672,7 +672,7 @@ function SebiPublicIssuesSection() {
           </div>
         </div>
         <Link
-          to="/sebi-intel"
+          to="/sebi"
           className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
         >
           View all <ArrowRight className="h-3 w-3" />
@@ -686,7 +686,7 @@ function SebiPublicIssuesSection() {
         </div>
       ) : rows.length === 0 ? (
         <div className="text-sm text-muted-foreground py-8 text-center">
-          No filings indexed yet. Open SEBI Intelligence and refresh the repository.
+          No filings indexed yet. Open SEBI and refresh the repository.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -734,7 +734,7 @@ function SebiOrdersSection() {
           </div>
         </div>
         <Link
-          to="/sebi-intel"
+          to="/sebi"
           className="text-xs text-primary hover:underline inline-flex items-center gap-1 border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary/10 transition"
         >
           View all <ArrowRight className="h-3 w-3" />
@@ -748,7 +748,7 @@ function SebiOrdersSection() {
         </div>
       ) : rows.length === 0 ? (
         <div className="text-sm text-muted-foreground py-8 text-center">
-          No orders indexed yet. Open SEBI Intelligence and refresh the repository.
+          No orders indexed yet. Open SEBI and refresh the repository.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
