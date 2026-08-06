@@ -384,87 +384,169 @@ async function summarizeSebi(title: string, category: string | null): Promise<st
 }
 
 
-// ---------------- CERT-In Advisory Repository (official only) ----------------
+// ---------------- CERT-In Repositories (official only) ----------------
 //
 // Source of truth: https://www.cert-in.org.in/
-// Flow: Advisories → Advisories of the Year → <year>
-//   https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year=<year>
-// Rule: ONLY the official CERT-In advisory listing. No RSS, no Google News,
-// no third-party sources.
+//   Advisories 2026:          ?pageid=PUBADVLIST02&year=2026
+//   Vulnerability Notes 2026: ?pageid=VLNLIST02&year=2026
+// Rule: ONLY the official CERT-In listings. No RSS, no Google News, no
+// third-party sources. Only 2026 records are indexed.
 
-function parseCertInHtml(html: string): NormalizedItem[] {
+const CERT_YEAR = 2026;
+
+// The official listing renders each record as three stacked rows:
+//   <a ...VLCODE=CIAD-2026-0036>CERT-In Advisory CIAD-2026-0036</a>
+//   <span ...>(July 22, 2026)</span>
+//   <div ...><span style="padding-left:20px">Multiple Vulnerabilities in Oracle Products</span></div>
+// The descriptive title lives in the third row — never in the link text.
+function parseCertInListing(html: string, kind: "Advisory" | "Vulnerability Note"): NormalizedItem[] {
   const items: NormalizedItem[] = [];
   const seen = new Set<string>();
-  const anchorRe =
-    /<a[^>]+href="([^"]*VLCODE=(CI(?:VN|AD)-\d{4}-\d{4,5}))[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
+  const prefix = kind === "Advisory" ? "CIAD" : "CIVN";
+  const anchorRe = new RegExp(
+    `<a[^>]+href="([^"]*VLCODE=(${prefix}-\\d{4}-\\d{3,5}))[^"]*"`,
+    "gi",
+  );
   let m: RegExpExecArray | null;
   while ((m = anchorRe.exec(html)) !== null) {
     const hrefRaw = m[1].replace(/&amp;/g, "&");
     const advId = m[2];
     if (seen.has(advId)) continue;
     seen.add(advId);
-    const title = stripHtml(m[3]).slice(0, 400);
+    if (!advId.includes(`-${CERT_YEAR}-`)) continue;
     const url = hrefRaw.startsWith("http")
       ? hrefRaw
       : `https://www.cert-in.org.in/${hrefRaw.replace(/^\//, "")}`;
-    if (!title) continue;
-    const tail = html.slice(m.index, m.index + 600);
-    const dateMatch =
-      /(\d{1,2})[-\s/](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-\s/](\d{4})/i.exec(
+    const tail = html.slice(m.index, m.index + 2000);
+
+    // Publication date: "(August    06, 2026)"
+    let published_at: string | null = null;
+    const dm =
+      /\((January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s*(\d{4})\)/i.exec(
         tail,
       );
-    let published_at: string | null = null;
-    if (dateMatch) {
-      const d = new Date(`${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}`);
+    if (dm) {
+      const d = new Date(`${dm[1]} ${dm[2]} ${dm[3]} UTC`);
       if (!isNaN(d.getTime())) published_at = d.toISOString();
-    } else {
-      // fall back to year from advisory id (CIVN-2026-1234)
-      const yearM = /CI(?:VN|AD)-(\d{4})-/.exec(advId);
-      if (yearM) published_at = new Date(`${yearM[1]}-01-01T00:00:00Z`).toISOString();
     }
+
+    // Descriptive title from the content row.
+    let title = "";
+    const tm = /padding-left:\s*\d+px[^>]*>([^<]{5,300})</i.exec(tail);
+    if (tm) title = stripHtml(tm[1]);
+    if (!title) title = advId;
+
     items.push({
       external_id: advId,
-      title: `${advId}: ${title}`,
+      title,
       url,
       publisher: "CERT-In",
-      category: advId.startsWith("CIAD") ? "Advisory" : "Vulnerability Note",
+      category: kind,
       severity: detectSeverity(title),
-      snippet: title,
+      snippet: advId,
       published_at,
     });
   }
   return items;
 }
 
-async function scrapeCertIn(): Promise<NormalizedItem[]> {
-  // Always include 2026 explicitly plus current & recent years; some
-  // deployments were missing 2026 items because the year loop silently
-  // dropped fetches that timed out. We now retry each year once and
-  // extend the per-fetch timeout.
-  const currentYear = new Date().getUTCFullYear();
-  const years = Array.from(new Set([2026, currentYear, currentYear - 1, currentYear - 2])).sort(
-    (a, b) => b - a,
-  );
-  const items: NormalizedItem[] = [];
-  for (const year of years) {
-    const url = `https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year=${year}`;
-    let html = await fetchHtml(url, "https://www.cert-in.org.in/", { timeoutMs: 30000 });
-    if (!html) {
-      // one retry
-      html = await fetchHtml(url, "https://www.cert-in.org.in/", { timeoutMs: 30000 });
-    }
-    if (!html) {
-      console.warn("[sync cert-in] year unreachable", year);
-      continue;
-    }
-    const parsed = parseCertInHtml(html);
-    console.log(`[sync cert-in] year ${year}: ${parsed.length} items`);
-    items.push(...parsed);
+async function scrapeCertInPage(
+  pageid: "PUBADVLIST02" | "VLNLIST02",
+  kind: "Advisory" | "Vulnerability Note",
+): Promise<NormalizedItem[]> {
+  const url = `https://www.cert-in.org.in/s2cMainServlet?pageid=${pageid}&year=${CERT_YEAR}`;
+  let html = await fetchHtml(url, "https://www.cert-in.org.in/", { timeoutMs: 30000 });
+  if (!html) html = await fetchHtml(url, "https://www.cert-in.org.in/", { timeoutMs: 30000 });
+  if (!html) {
+    console.warn("[sync cert-in] official listing unreachable", pageid);
+    return [];
   }
-  const map = new Map<string, NormalizedItem>();
-  for (const it of items) if (!map.has(it.external_id)) map.set(it.external_id, it);
-  return Array.from(map.values());
+  const parsed = parseCertInListing(html, kind);
+  console.log(`[sync cert-in] ${pageid} ${CERT_YEAR}: ${parsed.length} items`);
+  return parsed;
 }
+
+async function scrapeCertIn(): Promise<NormalizedItem[]> {
+  return scrapeCertInPage("PUBADVLIST02", "Advisory");
+}
+
+async function scrapeCertInVuln(): Promise<NormalizedItem[]> {
+  return scrapeCertInPage("VLNLIST02", "Vulnerability Note");
+}
+
+// Executive summary for a CERT-In record. Uses the official advisory page text
+// when reachable so the summary describes the actual issue instead of echoing
+// the advisory number.
+async function summarizeCertIn(
+  advId: string,
+  title: string,
+  kind: string,
+  url: string,
+): Promise<string | null> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) return null;
+  let detail = "";
+  try {
+    const html = await fetchHtml(url, "https://www.cert-in.org.in/", { timeoutMs: 20000 });
+    if (html) {
+      const body = html.slice(html.indexOf("print_content"));
+      detail = stripHtml(body).replace(/\s+/g, " ").slice(0, 4000);
+    }
+  } catch {
+    /* summary still generated from the title */
+  }
+  try {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a cybersecurity analyst writing executive summaries of CERT-In advisories for an asset-management leadership team. Write 2-3 plain sentences (max 80 words) covering: what the vulnerability or issue is, which products/versions are affected, the business risk (e.g. remote code execution, privilege escalation, data exposure, denial of service), and the recommended action (patch/upgrade/mitigation). Never repeat the advisory number. Never start with the advisory ID or the title. No bullet points, no preamble, no markdown.",
+          },
+          {
+            role: "user",
+            content: `CERT-In ${kind} titled "${title}".\nOfficial advisory text (may be truncated):\n${detail || "(not available — summarise from the title using standard security knowledge)"}`,
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) return null;
+    const json: any = await res.json();
+    const text = json?.choices?.[0]?.message?.content;
+    if (typeof text !== "string" || !text.trim()) return null;
+    const clean = text.trim().replace(/^\**\s*(CIAD|CIVN)-\d{4}-\d+\s*[:\-–]?\s*/i, "");
+    // Reject degenerate summaries that just echo the identifier/title.
+    if (clean.length < 40 || clean.toLowerCase() === title.toLowerCase()) return null;
+    return clean.slice(0, 1200);
+  } catch {
+    return null;
+  }
+}
+
+async function enrichCertInRows(
+  supa: ReturnType<typeof adminClient>,
+  rows: Array<{ id: string; title: string; url: string; category: string | null; external_id?: string }>,
+) {
+  for (const row of rows.slice(0, 40)) {
+    try {
+      const summary = await summarizeCertIn(
+        row.external_id ?? "",
+        row.title,
+        row.category ?? "Advisory",
+        row.url,
+      );
+      if (summary) await supa.from("feed_articles").update({ ai_summary: summary }).eq("id", row.id);
+    } catch (e) {
+      console.warn("[sync cert-in] enrich failed", row.url, (e as Error).message);
+    }
+  }
+}
+
 
 // ---------------- UTI AMC Cyber Watch ----------------
 
@@ -610,6 +692,7 @@ function classifyIncident(text: string): string {
 export type SourceKey =
   | "sebi-whats-new"
   | "cert-in"
+  | "cert-in-vuln"
   | "nse-cyber"
   | "cyber-news"
   | "ai-news"
@@ -655,6 +738,7 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
       let items: NormalizedItem[] = [];
       if (sourceKey === "sebi-whats-new") items = await scrapeSebi();
       else if (sourceKey === "cert-in") items = await scrapeCertIn();
+      else if (sourceKey === "cert-in-vuln") items = await scrapeCertInVuln();
       else if (sourceKey === "cyber-news") items = await scrapeCyberNews();
       else if (sourceKey === "ai-news") items = await scrapeAiNews();
       else if (sourceKey === "uti-amc-cyber") items = await scrapeUtiAmcCyber();
@@ -678,20 +762,27 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
         const { data, error } = await supa
           .from("feed_articles")
           .upsert(rows, { onConflict: "source_key,external_id", ignoreDuplicates: true })
-          .select("id, title, severity, url, category");
+          .select("id, external_id, title, severity, url, category");
         if (error) throw error;
         added = data?.length ?? 0;
         if (data && data.length > 0) {
           if (sourceKey === "sebi-whats-new") await enrichSebiRows(supa, data);
+          if (sourceKey === "cert-in" || sourceKey === "cert-in-vuln") {
+            await enrichCertInRows(supa, data);
+          }
           await supa.from("notifications").insert(
             data.slice(0, 25).map((d) => ({
               source_key: sourceKey,
               title:
                 sourceKey === "sebi-whats-new" && d.category
                   ? `SEBI ${d.category}: ${d.title}`
-                  : d.title,
+                  : sourceKey === "cert-in"
+                    ? `CERT-In Advisory ${d.external_id}: ${d.title}`
+                    : sourceKey === "cert-in-vuln"
+                      ? `CERT-In Vulnerability Note ${d.external_id}: ${d.title}`
+                      : d.title,
               body: null,
-              link: d.url,
+              link: sourceKey === "cert-in" || sourceKey === "cert-in-vuln" ? "/cert-in" : d.url,
               article_id: d.id,
               severity: d.severity,
             })),
