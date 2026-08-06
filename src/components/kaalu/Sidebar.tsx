@@ -26,7 +26,6 @@ import {
   ShieldAlert,
   Shield,
   Presentation,
-  FileText,
   Building2,
   Bell,
   Scale,
