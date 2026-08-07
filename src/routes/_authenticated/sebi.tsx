@@ -12,6 +12,8 @@ import {
   type PublicIssueRow,
 } from "@/lib/sebi-intel.functions";
 import { listArticles, refreshSource, type FeedArticle } from "@/lib/feeds.functions";
+import { ScrollTabs } from "@/components/kaalu/ScrollTabs";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
