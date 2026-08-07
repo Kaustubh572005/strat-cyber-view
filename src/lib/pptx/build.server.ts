@@ -223,7 +223,10 @@ function renderBlock(ctx: Ctx, b: Block, x: number, y: number, w: number, h: num
 
 function naturalHeight(b: Block): number {
   switch (b.kind) {
+    case "paragraph":
+      return Math.min(3.6, 0.4 + Math.ceil(b.text.length / 95) * 0.3 + (b.heading ? 0.3 : 0));
     case "bullets":
+
       return Math.min(3.4, 0.35 + b.items.slice(0, 8).length * 0.42);
     case "table":
       return 0.5 + Math.min(b.rows.length, 8) * 0.4;
