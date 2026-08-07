@@ -30,7 +30,9 @@ export type TemplateBlueprint = {
 };
 
 export type Block =
+  | { kind: "paragraph"; heading?: string; text: string }
   | { kind: "bullets"; items: string[] }
+
   | { kind: "table"; headers: string[]; rows: string[][] }
   | { kind: "kpis"; items: { label: string; value: string; note?: string }[] }
   | { kind: "timeline"; items: { when: string; what: string }[] }
