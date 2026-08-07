@@ -83,7 +83,23 @@ function tableFrame(
 function renderBlock(ctx: Ctx, b: Block, x: number, y: number, w: number, h: number): string {
   const c = ctx.bp.colors;
   switch (b.kind) {
+    case "paragraph": {
+      const body = b.text
+        .split(/\n+/)
+        .filter(Boolean)
+        .map((t) => para(t, { size: 14, color: "23272F" }))
+        .join("");
+      return textBox(
+        ctx,
+        x,
+        y,
+        w,
+        h,
+        (b.heading ? para(b.heading, { size: 15, bold: true, color: c.accent1 }) : "") + body,
+      );
+    }
     case "bullets":
+
       return textBox(
         ctx,
         x,
