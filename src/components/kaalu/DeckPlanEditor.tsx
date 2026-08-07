@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 
 const KIND_LABEL: Record<Block["kind"], string> = {
+  paragraph: "Paragraph",
   bullets: "Bullets",
   table: "Table",
   kpis: "KPI cards",
@@ -16,6 +17,8 @@ const KIND_LABEL: Record<Block["kind"], string> = {
 
 function blankBlock(kind: Block["kind"]): Block {
   switch (kind) {
+    case "paragraph":
+      return { kind: "paragraph", heading: "Overview", text: "" };
     case "table":
       return { kind: "table", headers: ["Item", "Owner", "Status"], rows: [["", "", ""]] };
     case "kpis":
@@ -34,6 +37,7 @@ function blankBlock(kind: Block["kind"]): Block {
       return { kind: "bullets", items: [""] };
   }
 }
+
 
 function BlockEditor({
   block,
@@ -54,6 +58,24 @@ function BlockEditor({
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
+
+      {block.kind === "paragraph" && (
+        <div className="space-y-2">
+          <Input
+            value={block.heading ?? ""}
+            onChange={(e) => onChange({ ...block, heading: e.target.value })}
+            className="text-sm font-medium"
+            placeholder="Heading (optional)"
+          />
+          <Textarea
+            value={block.text}
+            onChange={(e) => onChange({ ...block, text: e.target.value })}
+            rows={4}
+            className="text-sm"
+            placeholder="Executive narrative paragraph"
+          />
+        </div>
+      )}
 
       {block.kind === "bullets" && (
         <Textarea

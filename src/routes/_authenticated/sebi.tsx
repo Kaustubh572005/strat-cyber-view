@@ -12,6 +12,8 @@ import {
   type PublicIssueRow,
 } from "@/lib/sebi-intel.functions";
 import { listArticles, refreshSource, type FeedArticle } from "@/lib/feeds.functions";
+import { ScrollTabs } from "@/components/kaalu/ScrollTabs";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -194,8 +196,52 @@ function SebiPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
-        <nav className="glass rounded-2xl border border-border p-3 h-fit lg:sticky lg:top-4 space-y-3">
+      {/* Compact horizontal navigation for narrow screens */}
+      <div className="sticky top-14 z-20 -mx-4 mb-4 space-y-2 border-b border-border bg-background/95 px-4 py-2 backdrop-blur md:-mx-8 md:px-8 xl:hidden">
+        <ScrollTabs
+          items={[
+            { key: "search", label: "Global Search" },
+            { key: "legal", label: "Legal" },
+            { key: "public-issues", label: "Public Issues" },
+            { key: "orders", label: "Orders" },
+          ]}
+          activeKey={view.kind}
+          onSelect={(k) => {
+            if (k === "search") setView({ kind: "search" });
+            else if (k === "legal") setView({ kind: "legal", tab: LEGAL_TABS[0] });
+            else if (k === "public-issues") setView({ kind: "public-issues", type: PI_TYPES[0] });
+            else setView({ kind: "orders", category: ORDER_CATS[0] });
+          }}
+        />
+        {view.kind === "legal" && (
+          <ScrollTabs
+            size="sm"
+            items={LEGAL_TABS.map((t) => ({ key: t, label: t, count: legalBuckets[t].length }))}
+            activeKey={view.tab}
+            onSelect={(k) => setView({ kind: "legal", tab: k as LegalTab })}
+          />
+        )}
+        {view.kind === "public-issues" && (
+          <ScrollTabs
+            size="sm"
+            items={PI_TYPES.map((t) => ({ key: t, label: t }))}
+            activeKey={view.type}
+            onSelect={(k) => setView({ kind: "public-issues", type: k as (typeof PI_TYPES)[number] })}
+          />
+        )}
+        {view.kind === "orders" && (
+          <ScrollTabs
+            size="sm"
+            items={ORDER_CATS.map((c) => ({ key: c, label: c.replace(/^Orders (of|under) /, "") }))}
+            activeKey={view.category}
+            onSelect={(k) => setView({ kind: "orders", category: k as (typeof ORDER_CATS)[number] })}
+          />
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[280px_1fr]">
+        <nav className="glass hidden h-fit space-y-3 rounded-2xl border border-border p-3 xl:sticky xl:top-20 xl:block">
+
           <button
             onClick={() => setView({ kind: "search" })}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition ${
@@ -260,8 +306,9 @@ function SebiPage() {
         </nav>
 
         <section className="space-y-4 min-w-0">
-          <div className="glass rounded-2xl border border-border p-3 flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[220px]">
+          <div className="glass sticky top-14 z-10 flex flex-wrap items-center gap-2 rounded-2xl border border-border p-3 xl:top-20">
+            <div className="relative min-w-[200px] flex-1">
+
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 value={search}

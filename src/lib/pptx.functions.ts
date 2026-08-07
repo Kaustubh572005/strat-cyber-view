@@ -17,20 +17,69 @@ export const analyzePptxTemplate = createServerFn({ method: "POST" })
     return { name, blueprint };
   });
 
+export const extractReferenceFiles = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        files: z
+          .array(
+            z.object({
+              name: z.string().min(1).max(260),
+              mime: z.string().max(120).optional(),
+              base64: z.string().min(4),
+            }),
+          )
+          .min(1)
+          .max(10),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { extractReference } = await import("@/lib/pptx/extract.server");
+    const digests = [];
+    for (const f of data.files) digests.push(await extractReference(f));
+    return { digests };
+  });
+
 export const planPptxDeck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     TemplateRef.extend({
       topic: z.string().min(3).max(400),
-      slideCount: z.number().int().min(4).max(24),
+      slideCount: z.number().int().min(4).max(50),
       audience: z.string().max(200).optional(),
       tone: z.string().max(80).optional(),
       extraContext: z.string().max(4000).optional(),
+      references: z
+        .array(
+          z.object({
+            name: z.string(),
+            kind: z.string(),
+            chars: z.number(),
+            text: z.string(),
+          }),
+        )
+        .max(10)
+        .optional(),
+      controls: z
+        .object({
+          mode: z.enum(["quick", "corporate", "detailed"]).optional(),
+          detailLevel: z.enum(["concise", "balanced", "dense"]).optional(),
+          presentationType: z.string().max(80).optional(),
+          language: z.string().max(40).optional(),
+          includeCharts: z.boolean().optional(),
+          includeTables: z.boolean().optional(),
+          includeTimelines: z.boolean().optional(),
+          includeNotes: z.boolean().optional(),
+        })
+        .optional(),
     }).parse(d),
   )
   .handler(async ({ context, data }) => {
     const { bytes } = await fetchTemplateBytes(context.supabase, data.templateId);
     const bp = await analyzeTemplate(bytes);
+    const { buildReferenceCorpus } = await import("@/lib/pptx/extract.server");
     const plan = await planDeck({
       bp,
       topic: data.topic,
@@ -38,9 +87,12 @@ export const planPptxDeck = createServerFn({ method: "POST" })
       audience: data.audience,
       tone: data.tone,
       extraContext: data.extraContext,
+      references: data.references?.length ? buildReferenceCorpus(data.references) : undefined,
+      controls: data.controls,
     });
     return { blueprint: bp, plan };
   });
+
 
 export const buildPptxDeck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

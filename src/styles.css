@@ -202,3 +202,9 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: oklch(0.82 0.01 255); border-radius: 6px; }
 ::-webkit-scrollbar-thumb:hover { background: oklch(0.72 0.02 255); }
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { width: 0; height: 0; display: none; }
+}

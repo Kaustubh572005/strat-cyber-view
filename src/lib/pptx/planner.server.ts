@@ -4,6 +4,17 @@ import type { DeckPlan, TemplateBlueprint } from "./types";
 
 const clamp = (s: unknown, n: number) => String(s ?? "").slice(0, n);
 
+export type DeckControls = {
+  mode?: "quick" | "corporate" | "detailed";
+  detailLevel?: "concise" | "balanced" | "dense";
+  presentationType?: string;
+  language?: string;
+  includeCharts?: boolean;
+  includeTables?: boolean;
+  includeTimelines?: boolean;
+  includeNotes?: boolean;
+};
+
 export async function planDeck(input: {
   bp: TemplateBlueprint;
   topic: string;
@@ -11,6 +22,8 @@ export async function planDeck(input: {
   audience?: string;
   tone?: string;
   extraContext?: string;
+  references?: string;
+  controls?: DeckControls;
 }): Promise<DeckPlan> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
@@ -20,6 +33,23 @@ export async function planDeck(input: {
   const layoutList = input.bp.layouts
     .map((l) => `${l.index}: "${l.name}" (role=${l.role}, placeholders=${l.placeholders.join("|") || "none"})`)
     .join("\n");
+
+  const c = input.controls ?? {};
+  const density =
+    c.detailLevel === "concise"
+      ? "Each content slide carries 2 substantial blocks."
+      : c.detailLevel === "dense"
+        ? "Each content slide must carry 3 substantial blocks and fill the slide fully."
+        : "Each content slide carries 2-3 substantial blocks that fill the slide.";
+  const allowed = [
+    "paragraph",
+    "bullets",
+    c.includeTables === false ? null : "table",
+    "kpis",
+    c.includeTimelines === false ? null : "timeline",
+    c.includeCharts === false ? null : "chart",
+    "twoCol",
+  ].filter(Boolean);
 
   const prompt = `You are a senior management-consulting deck designer building an executive presentation inside a locked corporate PowerPoint template.
 
@@ -33,17 +63,29 @@ Existing template slide headings (mirror this house style/section wording where 
 
 TASK
 Topic: "${input.topic}"
-${input.audience ? `Audience: ${input.audience}\n` : ""}${input.tone ? `Tone: ${input.tone}\n` : ""}${input.extraContext ? `Additional context to use: ${input.extraContext}\n` : ""}Produce exactly ${input.slideCount} slides.
+${input.audience ? `Audience: ${input.audience}\n` : ""}${input.tone ? `Tone: ${input.tone}\n` : ""}${c.presentationType ? `Presentation type: ${c.presentationType}\n` : ""}${c.mode ? `Mode: ${c.mode} deck\n` : ""}${c.language && c.language !== "English" ? `Write all slide text in ${c.language}.\n` : ""}${input.extraContext ? `Additional context to use: ${input.extraContext}\n` : ""}Produce exactly ${input.slideCount} slides.
 
+${
+  input.references
+    ? `REFERENCE MATERIAL (extracted from files the user uploaded — this is the authoritative source. Reuse its real headings, figures, tables, dates, owners and terminology. Never contradict it, never ignore it):
+"""
+${input.references}
+"""
+`
+    : ""
+}
 CONTENT RULES
 - Slide 1 must be kind "title" using a layout whose role is title. Include a divider slide before major sections when the deck has 8+ slides. Final slide kind "closing".
-- Every content slide must be DENSE and specific — never generic filler, never empty placeholders. Use concrete, realistic figures, owners, dates, controls, regulations and metrics appropriate to the topic and to an Indian asset-management / BFSI context where relevant.
-- Vary the block types across the deck. Do not use "bullets" on more than half the content slides.
-- Max 3 blocks per slide, and keep total volume printable: tables <= 6 columns and <= 7 rows, kpis <= 4, timeline <= 5, chart series <= 6, bullets <= 6 items of <= 14 words.
+- Every content slide must be DENSE and specific — never generic filler, never empty placeholders, never a slide with only 2-3 short bullets. ${density}
+- Prefer concrete, realistic figures, owners, dates, controls, regulations and metrics appropriate to the topic and to an Indian asset-management / BFSI context where relevant. When reference material is supplied, take those numbers from it verbatim.
+- Vary block types across the deck: allowed kinds are ${allowed.join(", ")}. Do not use "bullets" on more than half the content slides. Use "paragraph" for executive narrative/summary slides (60-90 words per paragraph).
+- Max 3 blocks per slide, and keep total volume printable: tables <= 6 columns and <= 7 rows, kpis <= 4, timeline <= 5, chart series <= 6, bullets <= 6 items of <= 16 words.
 - Charts must carry plausible numeric values with a unit (e.g. "%", "M", " incidents").
+${c.includeNotes === false ? "- Omit the notes field." : "- Every slide needs a substantive 1-2 sentence speaker note."}
 
 Return ONLY minified JSON, no markdown fences, of this exact shape:
-{"deckTitle":"...","subtitle":"...","slides":[{"layoutIndex":4,"kind":"title|agenda|divider|content|closing","title":"...","subtitle":"optional","notes":"one-sentence speaker note","blocks":[
+{"deckTitle":"...","subtitle":"...","slides":[{"layoutIndex":4,"kind":"title|agenda|divider|content|closing","title":"...","subtitle":"optional","notes":"speaker note","blocks":[
+{"kind":"paragraph","heading":"optional","text":"..."},
 {"kind":"bullets","items":["..."]},
 {"kind":"table","headers":["..."],"rows":[["..."]]},
 {"kind":"kpis","items":[{"label":"...","value":"42%","note":"optional"}]},
@@ -59,6 +101,7 @@ Return ONLY minified JSON, no markdown fences, of this exact shape:
   const raw = JSON.parse(text.slice(s, e + 1));
   return normalizePlan(raw, input.bp, input.slideCount, input.topic);
 }
+
 
 export function normalizePlan(
   raw: any,
@@ -104,7 +147,14 @@ export function normalizePlan(
 
 function normBlock(b: any) {
   switch (b?.kind) {
+    case "paragraph":
+      return {
+        kind: "paragraph",
+        heading: b.heading ? clamp(b.heading, 80) : undefined,
+        text: clamp(b.text, 900),
+      };
     case "bullets":
+
       return { kind: "bullets", items: (b.items ?? []).slice(0, 8).map((x: any) => clamp(x, 220)) };
     case "table":
       return {
