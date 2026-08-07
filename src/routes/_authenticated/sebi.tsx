@@ -306,8 +306,9 @@ function SebiPage() {
         </nav>
 
         <section className="space-y-4 min-w-0">
-          <div className="glass rounded-2xl border border-border p-3 flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[220px]">
+          <div className="glass sticky top-14 z-10 flex flex-wrap items-center gap-2 rounded-2xl border border-border p-3 xl:top-20">
+            <div className="relative min-w-[200px] flex-1">
+
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 value={search}
