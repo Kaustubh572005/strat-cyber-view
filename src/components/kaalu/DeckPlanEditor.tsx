@@ -59,6 +59,24 @@ function BlockEditor({
         </Button>
       </div>
 
+      {block.kind === "paragraph" && (
+        <div className="space-y-2">
+          <Input
+            value={block.heading ?? ""}
+            onChange={(e) => onChange({ ...block, heading: e.target.value })}
+            className="text-sm font-medium"
+            placeholder="Heading (optional)"
+          />
+          <Textarea
+            value={block.text}
+            onChange={(e) => onChange({ ...block, text: e.target.value })}
+            rows={4}
+            className="text-sm"
+            placeholder="Executive narrative paragraph"
+          />
+        </div>
+      )}
+
       {block.kind === "bullets" && (
         <Textarea
           value={block.items.join("\n")}
