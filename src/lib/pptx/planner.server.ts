@@ -147,7 +147,14 @@ export function normalizePlan(
 
 function normBlock(b: any) {
   switch (b?.kind) {
+    case "paragraph":
+      return {
+        kind: "paragraph",
+        heading: b.heading ? clamp(b.heading, 80) : undefined,
+        text: clamp(b.text, 900),
+      };
     case "bullets":
+
       return { kind: "bullets", items: (b.items ?? []).slice(0, 8).map((x: any) => clamp(x, 220)) };
     case "table":
       return {
