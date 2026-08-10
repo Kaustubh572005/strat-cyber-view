@@ -2,6 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+export type ProfileControls = {
+  slideCount?: number;
+  detailLevel?: "concise" | "balanced" | "dense";
+  mode?: "quick" | "corporate" | "detailed";
+  includeCharts?: boolean;
+  includeTables?: boolean;
+  includeTimelines?: boolean;
+  includeNotes?: boolean;
+};
+
 export type PresentationProfile = {
   id: string;
   name: string;
@@ -12,7 +22,7 @@ export type PresentationProfile = {
   language: string;
   content_rules: string[];
   instructions: string | null;
-  controls: Record<string, unknown>;
+  controls: ProfileControls;
   is_default: boolean;
   created_at: string;
   updated_at: string;
@@ -123,10 +133,22 @@ export const duplicatePresentationProfile = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .single();
     if (error || !src) throw new Error(error?.message || "Profile not found");
-    const { id: _id, created_at: _c, updated_at: _u, ...rest } = src as Record<string, unknown>;
+    const p = src as unknown as PresentationProfile;
     const { data: out, error: insErr } = await context.supabase
       .from("presentation_profiles")
-      .insert({ ...rest, name: `${(src as any).name} (copy)`, is_default: false })
+      .insert({
+        user_id: context.userId,
+        name: `${p.name} (copy)`,
+        description: p.description,
+        audience: p.audience,
+        presentation_type: p.presentation_type,
+        tone: p.tone,
+        language: p.language,
+        content_rules: p.content_rules,
+        instructions: p.instructions,
+        controls: p.controls as never,
+        is_default: false,
+      })
       .select("*")
       .single();
     if (insErr) throw new Error(insErr.message);
