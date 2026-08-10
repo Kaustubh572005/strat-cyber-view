@@ -410,6 +410,57 @@ export type Database = {
         }
         Relationships: []
       }
+      presentation_profiles: {
+        Row: {
+          audience: string | null
+          content_rules: string[]
+          controls: Json
+          created_at: string
+          description: string | null
+          id: string
+          instructions: string | null
+          is_default: boolean
+          language: string
+          name: string
+          presentation_type: string | null
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience?: string | null
+          content_rules?: string[]
+          controls?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          is_default?: boolean
+          language?: string
+          name: string
+          presentation_type?: string | null
+          tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience?: string | null
+          content_rules?: string[]
+          controls?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          is_default?: boolean
+          language?: string
+          name?: string
+          presentation_type?: string | null
+          tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       presentation_templates: {
         Row: {
           created_at: string
