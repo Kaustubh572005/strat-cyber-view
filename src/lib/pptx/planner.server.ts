@@ -129,7 +129,7 @@ CONTENT RULES
 ${c.includeNotes === false ? "- Omit the notes field." : "- Every slide needs a substantive 1-2 sentence speaker note."}
 
 Return ONLY minified JSON, no markdown fences, of this exact shape:
-{"deckTitle":"...","subtitle":"...","slides":[{"layoutIndex":4,"kind":"title|agenda|divider|content|closing","title":"...","subtitle":"optional","notes":"speaker note","blocks":[
+{"deckTitle":"...","subtitle":"...","slides":[{"layoutIndex":4,"kind":"title|agenda|divider|content|closing","title":"...","subtitle":"optional","notes":"speaker note","sources":["file.xlsx"],"blocks":[
 {"kind":"paragraph","heading":"optional","text":"..."},
 {"kind":"bullets","items":["..."]},
 {"kind":"table","headers":["..."],"rows":[["..."]]},
@@ -179,6 +179,9 @@ export function normalizePlan(
         title: clamp(sl?.title || topic, 150),
         subtitle: sl?.subtitle ? clamp(sl.subtitle, 200) : undefined,
         notes: sl?.notes ? clamp(sl.notes, 400) : undefined,
+        sources: Array.isArray(sl?.sources)
+          ? sl.sources.slice(0, 10).map((x: any) => clamp(x, 160)).filter(Boolean)
+          : undefined,
         blocks: (Array.isArray(sl?.blocks) ? sl.blocks : []).slice(0, 3).map(normBlock).filter(Boolean),
       };
     });

@@ -55,6 +55,8 @@ export type PlannedSlide = {
   subtitle?: string;
   blocks: Block[];
   notes?: string;
+  /** File names of uploaded reference material that contributed to this slide. */
+  sources?: string[];
 };
 
 export type DeckPlan = {
