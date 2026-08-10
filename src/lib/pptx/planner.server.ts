@@ -15,8 +15,17 @@ export type DeckControls = {
   includeNotes?: boolean;
 };
 
+export type PlanProfile = {
+  name?: string;
+  description?: string;
+  contentRules?: string[];
+  instructions?: string;
+};
+
 export async function planDeck(input: {
+  profile?: PlanProfile;
   bp: TemplateBlueprint;
+
   topic: string;
   slideCount: number;
   audience?: string;
