@@ -43,7 +43,22 @@ export async function planDeck(input: {
     .map((l) => `${l.index}: "${l.name}" (role=${l.role}, placeholders=${l.placeholders.join("|") || "none"})`)
     .join("\n");
 
+  const prof = input.profile;
+  const profileBlock = prof
+    ? [
+        "PRESENTATION PROFILE (reusable house skill — obey it unless the user prompt overrides it)",
+        `Profile: ${prof.name ?? "Custom"}${prof.description ? ` — ${prof.description}` : ""}`,
+        prof.contentRules?.length
+          ? `Content rules:\n${prof.contentRules.map((r) => `- ${r}`).join("\n")}`
+          : "",
+        prof.instructions ? `Standing AI instructions:\n${prof.instructions}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : "";
+
   const c = input.controls ?? {};
+
   const density =
     c.detailLevel === "concise"
       ? "Each content slide carries 2 substantial blocks."
