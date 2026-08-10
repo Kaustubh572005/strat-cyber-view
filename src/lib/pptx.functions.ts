@@ -62,6 +62,14 @@ export const planPptxDeck = createServerFn({ method: "POST" })
         )
         .max(10)
         .optional(),
+      profile: z
+        .object({
+          name: z.string().max(160).optional(),
+          description: z.string().max(600).optional(),
+          contentRules: z.array(z.string().max(300)).max(40).optional(),
+          instructions: z.string().max(4000).optional(),
+        })
+        .optional(),
       controls: z
         .object({
           mode: z.enum(["quick", "corporate", "detailed"]).optional(),
@@ -89,6 +97,7 @@ export const planPptxDeck = createServerFn({ method: "POST" })
       extraContext: data.extraContext,
       references: data.references?.length ? buildReferenceCorpus(data.references) : undefined,
       controls: data.controls,
+      profile: data.profile,
     });
     return { blueprint: bp, plan };
   });

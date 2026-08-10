@@ -37,6 +37,30 @@ async function textFromOfficeZip(bytes: Uint8Array, kind: "pptx" | "docx" | "xls
   const parts: string[] = [];
 
   if (kind === "pptx") {
+    // Structural/visual reference: theme, fonts, colours, layouts, media, tables & charts.
+    const theme = (await zip.file("ppt/theme/theme1.xml")?.async("string")) ?? "";
+    const major = /<a:majorFont>[\s\S]*?typeface="([^"]+)"/.exec(theme)?.[1];
+    const minor = /<a:minorFont>[\s\S]*?typeface="([^"]+)"/.exec(theme)?.[1];
+    const accents = Array.from(theme.matchAll(/<a:accent\d>\s*<a:srgbClr val="([0-9A-Fa-f]{6})"/g)).map(
+      (m) => `#${m[1]}`,
+    );
+    const layoutNames: string[] = [];
+    for (const f of Object.keys(zip.files).filter((f) => /^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(f))) {
+      const xml = (await zip.file(f)?.async("string")) ?? "";
+      const n = /<p:cSld[^>]*name="([^"]*)"/.exec(xml)?.[1];
+      if (n) layoutNames.push(n);
+    }
+    const media = Object.keys(zip.files).filter((f) => /^ppt\/media\//.test(f));
+    const structural = [
+      `[Template structure] fonts: ${major ?? "?"} / ${minor ?? "?"}`,
+      accents.length ? `theme colours: ${accents.join(", ")}` : "",
+      layoutNames.length ? `layouts: ${layoutNames.join(" | ")}` : "",
+      media.length ? `embedded media/logos: ${media.length} file(s)` : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    parts.push(structural);
+
     const slides = Object.keys(zip.files)
       .filter((f) => /^ppt\/slides\/slide\d+\.xml$/.test(f))
       .sort(
@@ -45,7 +69,36 @@ async function textFromOfficeZip(bytes: Uint8Array, kind: "pptx" | "docx" | "xls
     for (let i = 0; i < slides.length; i++) {
       const xml = (await zip.file(slides[i]!)?.async("string")) ?? "";
       const t = Array.from(xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)).map((m) => m[1]!);
-      if (t.length) parts.push(`[Slide ${i + 1}] ${stripXml(t.join(" | "))}`);
+      const tables = (xml.match(/<a:tbl>/g) ?? []).length;
+      const charts = (xml.match(/graphicFrame|chart/g) ?? []).length ? 1 : 0;
+      const pics = (xml.match(/<p:pic>/g) ?? []).length;
+      const smart = /<dgm:|diagramData/.test(xml) ? 1 : 0;
+      const meta = [
+        tables ? `${tables} table(s)` : "",
+        charts ? "chart/graphic frame" : "",
+        pics ? `${pics} image(s)` : "",
+        smart ? "SmartArt/diagram" : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+      if (t.length)
+        parts.push(`[Slide ${i + 1}${meta ? ` — contains ${meta}` : ""}] ${stripXml(t.join(" | "))}`);
+
+      // Preserve real table grids so the planner can recreate them faithfully.
+      for (const tbl of Array.from(xml.matchAll(/<a:tbl>([\s\S]*?)<\/a:tbl>/g)).slice(0, 4)) {
+        const rows = Array.from(tbl[1]!.matchAll(/<a:tr[\s\S]*?<\/a:tr>/g)).slice(0, 12);
+        const grid = rows.map((r) =>
+          Array.from(r[0].matchAll(/<a:tc>([\s\S]*?)<\/a:tc>/g))
+            .map((c) =>
+              Array.from(c[1]!.matchAll(/<a:t>([^<]*)<\/a:t>/g))
+                .map((m) => m[1]!)
+                .join(" ")
+                .trim(),
+            )
+            .join(" | "),
+        );
+        if (grid.length) parts.push(`[Slide ${i + 1} table]\n${grid.join("\n")}`);
+      }
     }
     const notes = Object.keys(zip.files).filter((f) => /notesSlide\d+\.xml$/.test(f));
     for (const n of notes.slice(0, 40)) {
@@ -68,6 +121,7 @@ async function textFromOfficeZip(bytes: Uint8Array, kind: "pptx" | "docx" | "xls
     const sheets = Object.keys(zip.files)
       .filter((f) => /^xl\/worksheets\/sheet\d+\.xml$/.test(f))
       .sort();
+    parts.push(`[Workbook structure] ${sheets.length} worksheet(s). Preserve headers, totals and percentages as literal values; convert numeric columns into presentation tables and charts.`);
     for (const s of sheets.slice(0, 8)) {
       const xml = (await zip.file(s)?.async("string")) ?? "";
       const rows = Array.from(xml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)).slice(0, 200);

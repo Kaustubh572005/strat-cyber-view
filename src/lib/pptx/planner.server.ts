@@ -15,8 +15,17 @@ export type DeckControls = {
   includeNotes?: boolean;
 };
 
+export type PlanProfile = {
+  name?: string;
+  description?: string;
+  contentRules?: string[];
+  instructions?: string;
+};
+
 export async function planDeck(input: {
+  profile?: PlanProfile;
   bp: TemplateBlueprint;
+
   topic: string;
   slideCount: number;
   audience?: string;
@@ -34,7 +43,22 @@ export async function planDeck(input: {
     .map((l) => `${l.index}: "${l.name}" (role=${l.role}, placeholders=${l.placeholders.join("|") || "none"})`)
     .join("\n");
 
+  const prof = input.profile;
+  const profileBlock = prof
+    ? [
+        "PRESENTATION PROFILE (reusable house skill — obey it unless the user prompt overrides it)",
+        `Profile: ${prof.name ?? "Custom"}${prof.description ? ` — ${prof.description}` : ""}`,
+        prof.contentRules?.length
+          ? `Content rules:\n${prof.contentRules.map((r) => `- ${r}`).join("\n")}`
+          : "",
+        prof.instructions ? `Standing AI instructions:\n${prof.instructions}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : "";
+
   const c = input.controls ?? {};
+
   const density =
     c.detailLevel === "concise"
       ? "Each content slide carries 2 substantial blocks."
@@ -74,7 +98,28 @@ ${input.references}
 `
     : ""
 }
+${profileBlock}
+
+CONTENT PRIORITY (highest first) — when sources conflict prefer the higher one, unless it is clearly invalid:
+1. User prompt / topic and instructions above
+2. Selected Presentation Profile rules
+3. Uploaded PowerPoint template structure and branding (never alter branding)
+4. Uploaded reference files (Excel, PDF, Word, PowerPoint, images)
+5. General knowledge — only to fill genuine gaps
+
+STRUCTURE PRESERVATION
+- If reference material contains a meaningful table, recreate that table (real headers and rows) instead of flattening it into bullets.
+- If it contains numeric series, percentages, counts or totals, recreate them as a chart and/or table using exactly those figures — never invent different numbers.
+- If it contains milestones, phases or dates, emit a timeline block.
+- If it describes a process, architecture or comparison, emit twoCol or a comparison table rather than prose.
+- Reuse the reference material's own headings, terminology, owners, dates and units verbatim where they fit.
+- Where an uploaded image/diagram matters, describe and reference it on the relevant slide.
+
+SOURCE ATTRIBUTION
+- Every slide must include "sources": an array of the uploaded file names that contributed to it ([] when it comes only from the topic/profile). Never list a file you did not use.
+
 CONTENT RULES
+
 - Slide 1 must be kind "title" using a layout whose role is title. Include a divider slide before major sections when the deck has 8+ slides. Final slide kind "closing".
 - Every content slide must be DENSE and specific — never generic filler, never empty placeholders, never a slide with only 2-3 short bullets. ${density}
 - Prefer concrete, realistic figures, owners, dates, controls, regulations and metrics appropriate to the topic and to an Indian asset-management / BFSI context where relevant. When reference material is supplied, take those numbers from it verbatim.
@@ -84,7 +129,7 @@ CONTENT RULES
 ${c.includeNotes === false ? "- Omit the notes field." : "- Every slide needs a substantive 1-2 sentence speaker note."}
 
 Return ONLY minified JSON, no markdown fences, of this exact shape:
-{"deckTitle":"...","subtitle":"...","slides":[{"layoutIndex":4,"kind":"title|agenda|divider|content|closing","title":"...","subtitle":"optional","notes":"speaker note","blocks":[
+{"deckTitle":"...","subtitle":"...","slides":[{"layoutIndex":4,"kind":"title|agenda|divider|content|closing","title":"...","subtitle":"optional","notes":"speaker note","sources":["file.xlsx"],"blocks":[
 {"kind":"paragraph","heading":"optional","text":"..."},
 {"kind":"bullets","items":["..."]},
 {"kind":"table","headers":["..."],"rows":[["..."]]},
@@ -134,6 +179,9 @@ export function normalizePlan(
         title: clamp(sl?.title || topic, 150),
         subtitle: sl?.subtitle ? clamp(sl.subtitle, 200) : undefined,
         notes: sl?.notes ? clamp(sl.notes, 400) : undefined,
+        sources: Array.isArray(sl?.sources)
+          ? sl.sources.slice(0, 10).map((x: any) => clamp(x, 160)).filter(Boolean)
+          : undefined,
         blocks: (Array.isArray(sl?.blocks) ? sl.blocks : []).slice(0, 3).map(normBlock).filter(Boolean),
       };
     });

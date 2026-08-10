@@ -340,6 +340,17 @@ export function DeckPlanEditor({
             </Button>
           </div>
 
+          {slide.sources && slide.sources.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="uppercase tracking-widest">Sources</span>
+              {slide.sources.map((src) => (
+                <span key={src} className="rounded-full bg-muted px-2 py-0.5">
+                  {src}
+                </span>
+              ))}
+            </div>
+          )}
+
           <Textarea
             value={slide.notes ?? ""}
             onChange={(e) => patchSlide(i, { notes: e.target.value })}
@@ -347,6 +358,7 @@ export function DeckPlanEditor({
             rows={2}
             className="text-xs"
           />
+
         </div>
       ))}
 

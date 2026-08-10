@@ -6,6 +6,8 @@ import type { DeckPlan, TemplateBlueprint } from "@/lib/pptx/types";
 import { BUILTIN_TEMPLATE_ID } from "@/lib/pptx/constants";
 import { DeckPlanEditor } from "@/components/kaalu/DeckPlanEditor";
 import { SlideThumbGrid } from "@/components/kaalu/SlideThumbs";
+import { ProfileBar } from "@/components/kaalu/ProfileManager";
+import type { PresentationProfile } from "@/lib/profiles.functions";
 import {
   listTemplates,
   createTemplate,
@@ -202,6 +204,7 @@ function PresentationsPage() {
   const [blueprint, setBlueprint] = useState<TemplateBlueprint | null>(null);
   const [refs, setRefs] = useState<RefFile[]>([]);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [profile, setProfile] = useState<PresentationProfile | null>(null);
   const [phase, setPhase] = useState<string>("");
   const [progress, setProgress] = useState(0);
 
@@ -278,8 +281,16 @@ function PresentationsPage() {
           templateId,
           topic,
           slideCount,
-          audience: audience || undefined,
-          tone: tone || undefined,
+          audience: audience || profile?.audience || undefined,
+          tone: tone || profile?.tone || undefined,
+          profile: profile
+            ? {
+                name: profile.name,
+                description: profile.description ?? undefined,
+                contentRules: profile.content_rules ?? [],
+                instructions: profile.instructions ?? undefined,
+              }
+            : undefined,
           extraContext: extraContext || undefined,
           references: refs
             .filter((r) => r.status === "ready" && r.text)
@@ -287,8 +298,8 @@ function PresentationsPage() {
           controls: {
             mode,
             detailLevel,
-            presentationType,
-            language,
+            presentationType: presentationType || profile?.presentation_type || undefined,
+            language: language || profile?.language || undefined,
             includeCharts,
             includeTables,
             includeTimelines,
@@ -355,6 +366,27 @@ function PresentationsPage() {
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
         {/* ---------------- LEFT: workspace ---------------- */}
         <div className="min-w-0 space-y-5">
+          <ProfileBar
+            selectedId={profile?.id ?? null}
+            onSelect={(p) => {
+              setProfile(p);
+              if (p) {
+                if (p.audience) setAudience(p.audience);
+                if (p.tone) setTone(p.tone);
+                if (p.presentation_type) setPresentationType(p.presentation_type);
+                if (p.language) setLanguage(p.language);
+                const c = p.controls ?? {};
+                if (c.slideCount) setSlideCount(c.slideCount);
+                if (c.detailLevel) setDetailLevel(c.detailLevel);
+                if (c.mode) setMode(c.mode);
+                if (typeof c.includeCharts === "boolean") setIncludeCharts(c.includeCharts);
+                if (typeof c.includeTables === "boolean") setIncludeTables(c.includeTables);
+                if (typeof c.includeTimelines === "boolean") setIncludeTimelines(c.includeTimelines);
+                if (typeof c.includeNotes === "boolean") setIncludeNotes(c.includeNotes);
+              }
+            }}
+          />
+
           <ReferencePanel refs={refs} onAdd={addFiles} onRemove={(id) => setRefs((r) => r.filter((x) => x.id !== id))} />
 
           <section className="min-w-0 space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm md:p-5">
