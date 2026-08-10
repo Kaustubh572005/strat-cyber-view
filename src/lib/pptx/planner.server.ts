@@ -98,7 +98,28 @@ ${input.references}
 `
     : ""
 }
+${profileBlock}
+
+CONTENT PRIORITY (highest first) — when sources conflict prefer the higher one, unless it is clearly invalid:
+1. User prompt / topic and instructions above
+2. Selected Presentation Profile rules
+3. Uploaded PowerPoint template structure and branding (never alter branding)
+4. Uploaded reference files (Excel, PDF, Word, PowerPoint, images)
+5. General knowledge — only to fill genuine gaps
+
+STRUCTURE PRESERVATION
+- If reference material contains a meaningful table, recreate that table (real headers and rows) instead of flattening it into bullets.
+- If it contains numeric series, percentages, counts or totals, recreate them as a chart and/or table using exactly those figures — never invent different numbers.
+- If it contains milestones, phases or dates, emit a timeline block.
+- If it describes a process, architecture or comparison, emit twoCol or a comparison table rather than prose.
+- Reuse the reference material's own headings, terminology, owners, dates and units verbatim where they fit.
+- Where an uploaded image/diagram matters, describe and reference it on the relevant slide.
+
+SOURCE ATTRIBUTION
+- Every slide must include "sources": an array of the uploaded file names that contributed to it ([] when it comes only from the topic/profile). Never list a file you did not use.
+
 CONTENT RULES
+
 - Slide 1 must be kind "title" using a layout whose role is title. Include a divider slide before major sections when the deck has 8+ slides. Final slide kind "closing".
 - Every content slide must be DENSE and specific — never generic filler, never empty placeholders, never a slide with only 2-3 short bullets. ${density}
 - Prefer concrete, realistic figures, owners, dates, controls, regulations and metrics appropriate to the topic and to an Indian asset-management / BFSI context where relevant. When reference material is supplied, take those numbers from it verbatim.
