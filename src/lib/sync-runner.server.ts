@@ -687,6 +687,158 @@ function classifyIncident(text: string): string {
   return "Cybersecurity Disclosure";
 }
 
+
+// ---------------- LiveMint (official livemint.com feeds) ----------------
+//
+// Canonical source: https://www.livemint.com/ — official RSS sections only.
+// Tracking/query parameters on incoming URLs are stripped so the stored
+// canonical article URL is stable (this also keeps dedup reliable).
+// Only cyber / technology / AI / cyber-risk relevant articles are stored;
+// sports, entertainment, lifestyle, politics and generic market news are
+// filtered out BEFORE any AI credit is spent.
+
+const LIVEMINT_FEEDS = [
+  "https://www.livemint.com/rss/technology",
+  "https://www.livemint.com/rss/AI",
+  "https://www.livemint.com/rss/companies",
+  "https://www.livemint.com/rss/news",
+];
+
+const LM_RELEVANT =
+  /(cyber\s?security|cybersecurity|cyber[- ]?attack|cyber[- ]?crime|cyber[- ]?risk|cyber[- ]?fraud|cyber[- ]?threat|data\s?breach|breach|ransomware|malware|spyware|phishing|hack(?:ed|er|ing)?|zero[- ]day|vulnerabilit|exploit|ddos|infostealer|trojan|botnet|deepfake|information security|infosec|digital security|privacy (?:breach|leak|violation|law)|data (?:leak|protection|privacy|theft)|dpdp|encryption|identity theft|cert-in|sebi cyber|rbi cyber|critical infrastructure|cloud security|zero trust|artificial intelligence|generative ai|\bai\b|\bllm\b|chatgpt|openai|gemini|copilot|machine learning|quantum comput|semiconductor|enterprise (?:tech|software|cloud)|saas|cloud comput|it (?:ministry|rules|act)|meity|technology regulation)/i;
+
+const LM_EXCLUDE =
+  /(cricket|ipl\b|football|tennis|olympic|bollywood|hollywood|movie|film|box office|celebrity|astrolog|horoscope|recipe|fashion|travel diary|lifestyle|wedding|web series|sensex|nifty (?:closes|opens|today)|stocks to buy|gold rate|silver rate|petrol price|lottery|result 20\d\d)/i;
+
+function classifyLiveMint(text: string): string {
+  const t = text.toLowerCase();
+  if (/ransomware/.test(t)) return "Ransomware";
+  if (/data breach|breach|leak/.test(t)) return "Data Breach";
+  if (/phishing|scam|fraud/.test(t)) return "Cyber Fraud";
+  if (/malware|spyware|trojan|botnet/.test(t)) return "Malware";
+  if (/vulnerabilit|zero[- ]day|exploit|patch/.test(t)) return "Vulnerability";
+  if (/privacy|dpdp|data protection|regulation|ministry|rules/.test(t)) return "Policy & Regulation";
+  if (/artificial intelligence|generative ai|\bai\b|llm|chatgpt|openai|gemini|copilot|machine learning/.test(t))
+    return "AI & Emerging Tech";
+  if (/cyber/.test(t)) return "Cybersecurity";
+  return "Technology";
+}
+
+function canonicalLiveMintUrl(raw: string): string {
+  try {
+    const u = new URL(raw, "https://www.livemint.com/");
+    u.search = "";
+    u.hash = "";
+    u.protocol = "https:";
+    if (!/livemint\.com$/i.test(u.hostname)) u.hostname = "www.livemint.com";
+    return u.toString();
+  } catch {
+    return raw;
+  }
+}
+
+async function scrapeLiveMint(): Promise<NormalizedItem[]> {
+  const results = await Promise.all(
+    LIVEMINT_FEEDS.map(async (url) => {
+      try {
+        const raw = await fetchRss(url);
+        return raw
+          .slice(0, 40)
+          .map((it) => normalizeRssItem(it, "LiveMint"))
+          .filter((x): x is NormalizedItem => !!x);
+      } catch (e) {
+        console.error("[sync livemint]", url, (e as Error).message);
+        return [];
+      }
+    }),
+  );
+  const seen = new Set<string>();
+  const items: NormalizedItem[] = [];
+  for (const it of results.flat()) {
+    const url = canonicalLiveMintUrl(it.url);
+    if (seen.has(url)) continue;
+    const combined = `${it.title} ${it.snippet ?? ""}`;
+    if (LM_EXCLUDE.test(combined)) continue;
+    if (!LM_RELEVANT.test(combined)) continue;
+    seen.add(url);
+    items.push({
+      ...it,
+      url,
+      publisher: "LiveMint",
+      external_id: hash(`livemint:${url}`),
+      category: classifyLiveMint(combined),
+      severity: detectSeverity(combined),
+    });
+  }
+  return items;
+}
+
+// AI summary — only ever called for rows that were just inserted, so an
+// existing article never consumes credits again.
+async function summarizeLiveMint(
+  title: string,
+  snippet: string,
+  url: string,
+): Promise<string | null> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) return null;
+  let detail = snippet ?? "";
+  try {
+    const html = await fetchHtml(url, "https://www.livemint.com/", { timeoutMs: 15000 });
+    if (html) {
+      const body = stripHtml(html).replace(/\s+/g, " ");
+      if (body.length > detail.length) detail = body.slice(0, 4000);
+    }
+  } catch {
+    /* fall back to the RSS snippet */
+  }
+  try {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a cyber threat intelligence analyst briefing an asset-management leadership team. Write 2-3 plain sentences (max 90 words) explaining: what happened, who or what is affected, why it matters from a cybersecurity/technology standpoint, the potential impact, and any action or implication stated in the article. Never merely restate the headline. No bullet points, no markdown, no preamble.",
+          },
+          { role: "user", content: `Headline: ${title}\nArticle text (may be truncated):\n${detail || "(not available — summarise from the headline)"}` },
+        ],
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) {
+      console.warn("[sync livemint] ai gateway", res.status);
+      return null;
+    }
+    const json: any = await res.json();
+    const text = json?.choices?.[0]?.message?.content;
+    if (typeof text !== "string" || !text.trim()) return null;
+    const clean = text.trim();
+    if (clean.length < 40 || clean.toLowerCase() === title.toLowerCase()) return null;
+    return clean.slice(0, 1200);
+  } catch (e) {
+    console.warn("[sync livemint] summary failed", (e as Error).message);
+    return null;
+  }
+}
+
+async function enrichLiveMintRows(
+  supa: ReturnType<typeof adminClient>,
+  rows: Array<{ id: string; title: string; url: string; snippet?: string | null }>,
+) {
+  for (const row of rows.slice(0, 25)) {
+    try {
+      const summary = await summarizeLiveMint(row.title, row.snippet ?? "", row.url);
+      if (summary) await supa.from("feed_articles").update({ ai_summary: summary }).eq("id", row.id);
+    } catch (e) {
+      console.warn("[sync livemint] enrich failed", row.url, (e as Error).message);
+    }
+  }
+}
+
 // ---------------- Runner ----------------
 
 export type SourceKey =
@@ -696,7 +848,8 @@ export type SourceKey =
   | "nse-cyber"
   | "cyber-news"
   | "ai-news"
-  | "uti-amc-cyber";
+  | "uti-amc-cyber"
+  | "livemint";
 
 export async function runSync(sourceKey: SourceKey): Promise<{ added: number; total: number }> {
   const supa = adminClient();
@@ -742,6 +895,7 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
       else if (sourceKey === "cyber-news") items = await scrapeCyberNews();
       else if (sourceKey === "ai-news") items = await scrapeAiNews();
       else if (sourceKey === "uti-amc-cyber") items = await scrapeUtiAmcCyber();
+      else if (sourceKey === "livemint") items = await scrapeLiveMint();
       total = items.length;
 
       // Batch upsert with dedup
@@ -762,7 +916,7 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
         const { data, error } = await supa
           .from("feed_articles")
           .upsert(rows, { onConflict: "source_key,external_id", ignoreDuplicates: true })
-          .select("id, external_id, title, severity, url, category");
+          .select("id, external_id, title, severity, url, category, snippet");
         if (error) throw error;
         added = data?.length ?? 0;
         if (data && data.length > 0) {
@@ -770,6 +924,7 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
           if (sourceKey === "cert-in" || sourceKey === "cert-in-vuln") {
             await enrichCertInRows(supa, data);
           }
+          if (sourceKey === "livemint") await enrichLiveMintRows(supa, data);
           await supa.from("notifications").insert(
             data.slice(0, 25).map((d) => ({
               source_key: sourceKey,
@@ -780,7 +935,9 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
                     ? `CERT-In Advisory ${d.external_id}: ${d.title}`
                     : sourceKey === "cert-in-vuln"
                       ? `CERT-In Vulnerability Note ${d.external_id}: ${d.title}`
-                      : d.title,
+                      : sourceKey === "livemint"
+                        ? `LiveMint: ${d.title}`
+                        : d.title,
               body: null,
               link: sourceKey === "cert-in" || sourceKey === "cert-in-vuln" ? "/cert-in" : d.url,
               article_id: d.id,
