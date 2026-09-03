@@ -853,12 +853,25 @@ export type SourceKey =
 
 export async function runSync(sourceKey: SourceKey): Promise<{ added: number; total: number }> {
   const supa = adminClient();
+
+  // Single-flight lease: a second concurrent run (another browser tab, a manual
+  // refresh landing on top of the scheduler) exits instead of duplicating work.
+  const { data: gotLock, error: lockError } = await supa.rpc("acquire_sync_lock", {
+    _source_key: sourceKey,
+    _ttl_seconds: 900,
+  });
+  if (!lockError && gotLock === false) {
+    console.warn("[runSync] already running, skipped", sourceKey);
+    return { added: 0, total: 0 };
+  }
+
   const run = await supa
     .from("sync_runs")
     .insert({ source_key: sourceKey, status: "running" })
     .select("id")
     .single();
   const runId = run.data?.id;
+
 
   try {
     let added = 0;
