@@ -978,6 +978,7 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
         .update({ finished_at: new Date().toISOString(), status: "ok", added_count: added })
         .eq("id", runId);
     }
+    await supa.rpc("release_sync_lock", { _source_key: sourceKey });
     return { added, total };
   } catch (e) {
     const msg = (e as Error).message;
@@ -997,6 +998,7 @@ export async function runSync(sourceKey: SourceKey): Promise<{ added: number; to
         .update({ finished_at: new Date().toISOString(), status: "error", error: msg })
         .eq("id", runId);
     }
+    await supa.rpc("release_sync_lock", { _source_key: sourceKey });
     throw e;
   }
 }
