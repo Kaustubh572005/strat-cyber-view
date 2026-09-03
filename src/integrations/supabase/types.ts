@@ -641,6 +641,24 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_locks: {
+        Row: {
+          locked_at: string
+          locked_until: string
+          source_key: string
+        }
+        Insert: {
+          locked_at?: string
+          locked_until: string
+          source_key: string
+        }
+        Update: {
+          locked_at?: string
+          locked_until?: string
+          source_key?: string
+        }
+        Relationships: []
+      }
       sync_runs: {
         Row: {
           added_count: number
@@ -700,7 +718,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      acquire_sync_lock: {
+        Args: { _source_key: string; _ttl_seconds: number }
+        Returns: boolean
+      }
+      release_sync_lock: { Args: { _source_key: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
