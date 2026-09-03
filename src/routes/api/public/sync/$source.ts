@@ -9,6 +9,7 @@ const VALID: SourceKey[] = [
   "cyber-news",
   "ai-news",
   "uti-amc-cyber",
+  "livemint",
 ];
 
 async function handle(source: string) {

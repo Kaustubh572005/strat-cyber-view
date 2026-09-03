@@ -169,6 +169,7 @@ export const refreshSource = createServerFn({ method: "POST" })
           "cyber-news",
           "ai-news",
           "uti-amc-cyber",
+          "livemint",
           "all",
         ]),
       })
@@ -186,6 +187,7 @@ export const refreshSource = createServerFn({ method: "POST" })
             "cyber-news",
             "ai-news",
             "uti-amc-cyber",
+            "livemint",
           ] as const)
         : [data.source_key];
     const results: Array<{ source: string; added: number; total: number; error?: string }> = [];
