@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getCyberFeed, getLatestCves, CYBER_SOURCES } from "@/lib/cyber.functions";
 import { useMemo, useState } from "react";
@@ -13,7 +13,10 @@ import {
   Radio,
   ExternalLink,
   Clock,
+  RefreshCw,
+  Sparkles,
 } from "lucide-react";
+import { listArticles, listSourceStatus, refreshSource } from "@/lib/feeds.functions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +25,10 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/_authenticated/cyber")({
   component: CyberPage,
 });
+
+// Feeds are synchronised server-side every 6 hours; the UI polls on the same
+// cadence so no AI credits are spent re-processing existing intelligence.
+const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
 const sevColor: Record<string, string> = {
   critical: "bg-red-500/20 text-red-300 border-red-500/40",
@@ -37,7 +44,7 @@ function CyberPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["cyber-feed"],
     queryFn: () => feed(),
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: SIX_HOURS_MS,
     staleTime: 60 * 1000,
   });
   const { data: cveRows = [] } = useQuery({
@@ -47,6 +54,47 @@ function CyberPage() {
   });
 
   const [cveSeverity, setCveSeverity] = useState<string>("ALL");
+
+  // ---- LiveMint (official livemint.com) — an additional source inside News ----
+  const fetchLiveMint = useServerFn(listArticles);
+  const fetchStatus = useServerFn(listSourceStatus);
+  const doRefresh = useServerFn(refreshSource);
+  const qc = useQueryClient();
+  const [lmFilter, setLmFilter] = useState<string>("ALL");
+
+  const { data: lmArticles = [], isLoading: lmLoading } = useQuery({
+    queryKey: ["livemint-articles"],
+    queryFn: () => fetchLiveMint({ data: { source_key: "livemint", limit: 60 } }),
+    refetchInterval: SIX_HOURS_MS,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: sourceStatus = [] } = useQuery({
+    queryKey: ["source-status"],
+    queryFn: () => fetchStatus(),
+    refetchInterval: SIX_HOURS_MS,
+  });
+  const lmStatus = sourceStatus.find((s) => s.source_key === "livemint");
+
+  const refreshMutation = useMutation({
+    mutationFn: () => doRefresh({ data: { source_key: "livemint" } }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["livemint-articles"] });
+      qc.invalidateQueries({ queryKey: ["source-status"] });
+    },
+  });
+
+  const lmCategories = useMemo(
+    () => ["ALL", ...Array.from(new Set(lmArticles.map((a) => a.category).filter(Boolean) as string[]))],
+    [lmArticles],
+  );
+  const lmFiltered = useMemo(
+    () => (lmFilter === "ALL" ? lmArticles : lmArticles.filter((a) => a.category === lmFilter)),
+    [lmArticles, lmFilter],
+  );
+  const nextSync = lmStatus?.last_synced_at
+    ? new Date(new Date(lmStatus.last_synced_at).getTime() + SIX_HOURS_MS)
+    : null;
 
   const filteredCves = useMemo(
     () => (cveSeverity === "ALL" ? cveRows : cveRows.filter((c) => c.severity === cveSeverity)),
@@ -166,6 +214,116 @@ function CyberPage() {
             })}
           </div>
         </aside>
+      </section>
+
+      {/* LiveMint — official livemint.com cyber / technology intelligence */}
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
+          <div>
+            <h2 className="text-lg font-semibold">LiveMint — Cyber & Technology News</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Official source:{" "}
+              <a
+                href="https://www.livemint.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:underline"
+              >
+                livemint.com
+              </a>{" "}
+              · stored permanently, only new articles are summarised by AI.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-[11px] text-muted-foreground text-right leading-tight">
+              <div>
+                Last sync:{" "}
+                {lmStatus?.last_synced_at
+                  ? new Date(lmStatus.last_synced_at).toLocaleString()
+                  : "not yet"}
+                {lmStatus?.last_status === "error" && (
+                  <span className="ml-1 text-red-500">(failed — showing stored articles)</span>
+                )}
+              </div>
+              <div>Next scheduled sync: {nextSync ? nextSync.toLocaleString() : "within 6 hours"}</div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refreshMutation.mutate()}
+              disabled={refreshMutation.isPending}
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 mr-1.5 ${refreshMutation.isPending ? "animate-spin" : ""}`}
+              />
+              {refreshMutation.isPending ? "Refreshing…" : "Refresh Now"}
+            </Button>
+          </div>
+        </div>
+
+        {lmCategories.length > 1 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {lmCategories.map((c) => (
+              <button
+                key={c}
+                onClick={() => setLmFilter(c)}
+                className={`text-[11px] px-2 py-1 rounded border ${lmFilter === c ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {lmLoading && <div className="text-sm text-muted-foreground">Loading LiveMint articles…</div>}
+        {!lmLoading && lmFiltered.length === 0 && (
+          <div className="text-sm text-muted-foreground">
+            No LiveMint articles stored yet — use Refresh Now to pull the latest.
+          </div>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {lmFiltered.slice(0, 24).map((a) => (
+            <article
+              key={a.id}
+              className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition flex flex-col"
+            >
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
+                <span className="text-primary">LiveMint</span>
+                {a.category && <span>· {a.category}</span>}
+                {a.severity && (
+                  <span className={`ml-auto px-1.5 rounded border ${sevColor[a.severity] ?? ""}`}>
+                    {a.severity}
+                  </span>
+                )}
+              </div>
+              <div className="font-medium text-sm leading-snug">{a.title}</div>
+              {a.ai_summary ? (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 text-primary font-medium">
+                    <Sparkles className="h-3 w-3" /> AI summary
+                  </span>
+                  <p className="mt-1">{a.ai_summary}</p>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground mt-2 line-clamp-3">{a.snippet}</div>
+              )}
+              <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {a.published_at ? new Date(a.published_at).toLocaleString() : "—"}
+                </span>
+                <a
+                  href={a.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Read Original <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       {/* AI & Emerging Tech */}
