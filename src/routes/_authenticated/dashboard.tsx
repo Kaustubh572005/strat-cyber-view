@@ -83,6 +83,7 @@ function DashboardPage() {
   const sebi = byKey("sebi-whats-new");
   const certIn = byKey("cert-in");
   const uti = byKey("uti-amc-cyber");
+  const liveMint = byKey("livemint");
   const nse = nseQ.data ?? [];
   const notifs = (notifQ.data ?? []).filter((n) => !n.dismissed);
 
@@ -242,6 +243,18 @@ function DashboardPage() {
         renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="primary" showSeverity showCategory />}
       />
 
+
+      <FeedSection
+        icon={Newspaper}
+        title="LiveMint — Cyber & Technology"
+        subtitle="Cybersecurity, AI and technology intelligence from livemint.com"
+        viewAllTo="/cyber"
+        sourceKey="livemint"
+        items={liveMint.slice(0, 8)}
+        loading={feedQ.isLoading}
+        isNew={isNew}
+        renderer={(a) => <ArticleCard article={a} isNew={isNew(a.id)} tone="primary" showSeverity showCategory />}
+      />
 
       <FeedSection
         icon={Cpu}
