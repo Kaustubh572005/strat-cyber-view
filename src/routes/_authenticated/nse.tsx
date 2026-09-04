@@ -30,7 +30,7 @@ function NsePage() {
   const query = useQuery({
     queryKey: ["nse-disclosures"],
     queryFn: () => get({ data: { limit: 500 } }),
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 6 * 60 * 60 * 1000,
     staleTime: 60_000,
   });
   const mut = useMutation({

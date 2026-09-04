@@ -30,7 +30,7 @@ function NotificationsPage() {
   const q = useQuery({
     queryKey: ["notifications"],
     queryFn: () => get({ data: { limit: 200 } }),
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 6 * 60 * 60 * 1000,
     staleTime: 30_000,
   });
 
