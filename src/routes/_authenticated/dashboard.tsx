@@ -34,7 +34,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-const POLL_MS = 5 * 60 * 1000;
+// Server-side sync runs every 6 hours; client polling matches it so stored
+// intelligence is never re-fetched or re-processed unnecessarily.
+const POLL_MS = 6 * 60 * 60 * 1000;
 
 function DashboardPage() {
   const getArticles = useServerFn(listArticles);
@@ -47,7 +49,7 @@ function DashboardPage() {
     queryFn: () =>
       getArticles({
         data: {
-          source_keys: ["sebi-whats-new", "cert-in", "cyber-news", "ai-news", "uti-amc-cyber"],
+          source_keys: ["sebi-whats-new", "cert-in", "cyber-news", "ai-news", "uti-amc-cyber", "livemint"],
           limit: 500,
         },
       }),
@@ -141,7 +143,7 @@ function DashboardPage() {
           <h1 className="text-3xl font-semibold neon-text mt-1">Executive Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
             Live aggregation from SEBI, CERT-In, NSE cybersecurity notices, and global cyber &amp; AI news.
-            Data is synced hourly to a permanent repository. Page auto-refreshes every 5 minutes.
+            Data is synced every 6 hours to a permanent repository. Page auto-refreshes on the same cadence.
           </p>
         </div>
         <RefreshAllButton />

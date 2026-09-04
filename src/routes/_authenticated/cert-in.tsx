@@ -67,7 +67,7 @@ function CertInPage() {
   const query = useQuery({
     queryKey: ["cert-articles", tab.source],
     queryFn: () => get({ data: { source_key: tab.source, limit: 500 } }),
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 6 * 60 * 60 * 1000,
     staleTime: 60_000,
   });
   const mut = useMutation({

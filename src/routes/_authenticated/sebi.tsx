@@ -109,7 +109,7 @@ function SebiPage() {
   const legalQ = useQuery({
     queryKey: ["sebi-articles"],
     queryFn: () => getLegal({ data: { source_key: "sebi-whats-new", limit: 500 } }),
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 6 * 60 * 60 * 1000,
     staleTime: 60_000,
   });
 
