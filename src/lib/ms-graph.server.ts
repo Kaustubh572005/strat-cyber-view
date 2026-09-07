@@ -31,7 +31,7 @@ export const MS_SCOPES = [
 
 export function msAuthorizeUrl(redirectUri: string, state: string) {
   const params = new URLSearchParams({
-    client_id: CLIENT_ID,
+    client_id: clientId(),
     response_type: "code",
     redirect_uri: redirectUri,
     response_mode: "query",
@@ -44,8 +44,8 @@ export function msAuthorizeUrl(redirectUri: string, state: string) {
 
 export async function msExchangeCode(code: string, redirectUri: string) {
   const body = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
+    client_id: clientId(),
+    client_secret: clientSecret(),
     grant_type: "authorization_code",
     code,
     redirect_uri: redirectUri,
@@ -68,8 +68,8 @@ export async function msExchangeCode(code: string, redirectUri: string) {
 
 export async function msRefreshToken(refreshToken: string) {
   const body = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
+    client_id: clientId(),
+    client_secret: clientSecret(),
     grant_type: "refresh_token",
     refresh_token: refreshToken,
     scope: MS_SCOPES,
