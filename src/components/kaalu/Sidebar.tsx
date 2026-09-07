@@ -178,7 +178,7 @@ export function Sidebar() {
           label="Presentation Generator"
         />
         <a
-          href="https://sbom-workbench.lovable.app/"
+          href="https://vulnera-zen.lovable.app/"
           target="_blank"
           rel="noopener noreferrer"
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition text-muted-foreground hover:text-foreground hover:bg-muted"
