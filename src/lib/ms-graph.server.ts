@@ -5,8 +5,17 @@
 // The Entra app registration must be configured as multi-tenant
 // ("Accounts in any organizational directory and personal Microsoft accounts").
 const TENANT = "common";
-const CLIENT_ID = process.env.MS_CLIENT_ID!;
-const CLIENT_SECRET = process.env.MS_CLIENT_SECRET!;
+// Read at call time: env is injected per-request, not at module load.
+function clientId() {
+  const v = process.env.MS_CLIENT_ID;
+  if (!v) throw new Error("MS_CLIENT_ID is not configured");
+  return v;
+}
+function clientSecret() {
+  const v = process.env.MS_CLIENT_SECRET;
+  if (!v) throw new Error("MS_CLIENT_SECRET is not configured");
+  return v;
+}
 
 export const MS_SCOPES = [
   "openid",
