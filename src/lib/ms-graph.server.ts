@@ -5,8 +5,17 @@
 // The Entra app registration must be configured as multi-tenant
 // ("Accounts in any organizational directory and personal Microsoft accounts").
 const TENANT = "common";
-const CLIENT_ID = process.env.MS_CLIENT_ID!;
-const CLIENT_SECRET = process.env.MS_CLIENT_SECRET!;
+// Read at call time: env is injected per-request, not at module load.
+function clientId() {
+  const v = process.env.MS_CLIENT_ID;
+  if (!v) throw new Error("MS_CLIENT_ID is not configured");
+  return v;
+}
+function clientSecret() {
+  const v = process.env.MS_CLIENT_SECRET;
+  if (!v) throw new Error("MS_CLIENT_SECRET is not configured");
+  return v;
+}
 
 export const MS_SCOPES = [
   "openid",
@@ -22,7 +31,7 @@ export const MS_SCOPES = [
 
 export function msAuthorizeUrl(redirectUri: string, state: string) {
   const params = new URLSearchParams({
-    client_id: CLIENT_ID,
+    client_id: clientId(),
     response_type: "code",
     redirect_uri: redirectUri,
     response_mode: "query",
@@ -35,8 +44,8 @@ export function msAuthorizeUrl(redirectUri: string, state: string) {
 
 export async function msExchangeCode(code: string, redirectUri: string) {
   const body = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
+    client_id: clientId(),
+    client_secret: clientSecret(),
     grant_type: "authorization_code",
     code,
     redirect_uri: redirectUri,
@@ -59,8 +68,8 @@ export async function msExchangeCode(code: string, redirectUri: string) {
 
 export async function msRefreshToken(refreshToken: string) {
   const body = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
+    client_id: clientId(),
+    client_secret: clientSecret(),
     grant_type: "refresh_token",
     refresh_token: refreshToken,
     scope: MS_SCOPES,
