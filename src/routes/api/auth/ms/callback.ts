@@ -51,8 +51,9 @@ export const Route = createFileRoute("/api/auth/ms/callback")({
             .eq("id", userId);
           return htmlRedirect(`/mail?ms_connected=1`);
         } catch (e) {
-          console.error(e);
-          return htmlRedirect(`/settings?ms_error=exchange_failed`);
+          console.error("[ms callback]", e);
+          const msg = e instanceof Error ? e.message : String(e);
+          return htmlRedirect(`/settings?ms_error=${encodeURIComponent(msg.slice(0, 400))}`);
         }
       },
     },
