@@ -101,7 +101,12 @@ export function ComposeDialog({
   }
 
   async function doSend() {
-    if (!to.length) return toast.error("Please add a recipient");
+    // Flush anything still typed in the recipient boxes so a typed-but-not-
+    // chipped address still counts as a recipient.
+    const toList = commitTo.current?.() ?? to;
+    const ccList = commitCc.current?.() ?? cc;
+    const bccList = commitBcc.current?.() ?? bcc;
+    if (!toList.length) return toast.error("Please add a recipient");
     setSending(true);
     try {
       const { data } = await supabase.auth.getSession();
