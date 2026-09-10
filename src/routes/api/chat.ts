@@ -71,14 +71,17 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
+        const { buildMailTools } = await import("@/lib/kaalu-mail-tools.server");
+
         const result = streamText({
           model,
           system: KAALU_SYSTEM_PROMPT,
           messages: await convertToModelMessages(body.messages),
+          tools: buildMailTools(userId),
           // Cap runaway loops and keep replies coherent.
           maxRetries: 2,
           temperature: 0.7,
-          stopWhen: stepCountIs(4),
+          stopWhen: stepCountIs(50),
           abortSignal: request.signal,
           onError: ({ error }) => {
             console.error("[chat] stream error", error);
