@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +53,9 @@ export function ComposeDialog({
   const [draftId, setDraftId] = useState<string | undefined>(initial?.id);
   const assist = useServerFn(emailAssist);
   const save = useServerFn(saveDraft);
+  const commitTo = useRef<(() => Recipient[]) | null>(null);
+  const commitCc = useRef<(() => Recipient[]) | null>(null);
+  const commitBcc = useRef<(() => Recipient[]) | null>(null);
 
   useEffect(() => {
     if (open) {
