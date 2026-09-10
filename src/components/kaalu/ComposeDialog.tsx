@@ -114,7 +114,7 @@ export function ComposeDialog({
     try {
       const { data } = await supabase.auth.getSession();
       const saved = await save({
-        data: { id: draftId, to, cc, bcc, subject, body },
+        data: { id: draftId, to: toList, cc: ccList, bcc: bccList, subject, body },
       });
       const res = await fetch("/api/graph/send", {
         method: "POST",
@@ -124,9 +124,9 @@ export function ComposeDialog({
         },
         body: JSON.stringify({
           draftId: saved.id,
-          to,
-          cc,
-          bcc,
+          to: toList,
+          cc: ccList,
+          bcc: bccList,
           subject,
           body,
           contentType: "Text",
@@ -150,7 +150,12 @@ export function ComposeDialog({
           <DialogTitle>New message</DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
-          <RecipientInput label="To" value={to} onChange={setTo} />
+          <RecipientInput
+            label="To"
+            value={to}
+            onChange={setTo}
+            registerCommit={(c) => (commitTo.current = c)}
+          />
           {!showCc && !cc.length && (
             <div className="flex gap-3 text-xs">
               <button
@@ -168,10 +173,20 @@ export function ComposeDialog({
             </div>
           )}
           {(showCc || cc.length > 0) && (
-            <RecipientInput label="Cc" value={cc} onChange={setCc} />
+            <RecipientInput
+              label="Cc"
+              value={cc}
+              onChange={setCc}
+              registerCommit={(c) => (commitCc.current = c)}
+            />
           )}
           {(showBcc || bcc.length > 0) && (
-            <RecipientInput label="Bcc" value={bcc} onChange={setBcc} />
+            <RecipientInput
+              label="Bcc"
+              value={bcc}
+              onChange={setBcc}
+              registerCommit={(c) => (commitBcc.current = c)}
+            />
           )}
           <Input
             placeholder="Subject"
