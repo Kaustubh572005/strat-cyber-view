@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +53,9 @@ export function ComposeDialog({
   const [draftId, setDraftId] = useState<string | undefined>(initial?.id);
   const assist = useServerFn(emailAssist);
   const save = useServerFn(saveDraft);
+  const commitTo = useRef<(() => Recipient[]) | null>(null);
+  const commitCc = useRef<(() => Recipient[]) | null>(null);
+  const commitBcc = useRef<(() => Recipient[]) | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -101,12 +104,17 @@ export function ComposeDialog({
   }
 
   async function doSend() {
-    if (!to.length) return toast.error("Please add a recipient");
+    // Flush anything still typed in the recipient boxes so a typed-but-not-
+    // chipped address still counts as a recipient.
+    const toList = commitTo.current?.() ?? to;
+    const ccList = commitCc.current?.() ?? cc;
+    const bccList = commitBcc.current?.() ?? bcc;
+    if (!toList.length) return toast.error("Please add a recipient");
     setSending(true);
     try {
       const { data } = await supabase.auth.getSession();
       const saved = await save({
-        data: { id: draftId, to, cc, bcc, subject, body },
+        data: { id: draftId, to: toList, cc: ccList, bcc: bccList, subject, body },
       });
       const res = await fetch("/api/graph/send", {
         method: "POST",
@@ -116,9 +124,9 @@ export function ComposeDialog({
         },
         body: JSON.stringify({
           draftId: saved.id,
-          to,
-          cc,
-          bcc,
+          to: toList,
+          cc: ccList,
+          bcc: bccList,
           subject,
           body,
           contentType: "Text",
@@ -142,7 +150,12 @@ export function ComposeDialog({
           <DialogTitle>New message</DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
-          <RecipientInput label="To" value={to} onChange={setTo} />
+          <RecipientInput
+            label="To"
+            value={to}
+            onChange={setTo}
+            registerCommit={(c) => (commitTo.current = c)}
+          />
           {!showCc && !cc.length && (
             <div className="flex gap-3 text-xs">
               <button
@@ -160,10 +173,20 @@ export function ComposeDialog({
             </div>
           )}
           {(showCc || cc.length > 0) && (
-            <RecipientInput label="Cc" value={cc} onChange={setCc} />
+            <RecipientInput
+              label="Cc"
+              value={cc}
+              onChange={setCc}
+              registerCommit={(c) => (commitCc.current = c)}
+            />
           )}
           {(showBcc || bcc.length > 0) && (
-            <RecipientInput label="Bcc" value={bcc} onChange={setBcc} />
+            <RecipientInput
+              label="Bcc"
+              value={bcc}
+              onChange={setBcc}
+              registerCommit={(c) => (commitBcc.current = c)}
+            />
           )}
           <Input
             placeholder="Subject"
