@@ -27,29 +27,17 @@ export function buildMailTools(userId: string) {
   return {
     find_contact: tool({
       description:
-        "Look up an email address for a person by name or partial email from the user's Outlook contacts and directory. Use this before drafting when the user gives only a name.",
+        "Look up email addresses for a person by name or partial email across the user's Outlook relevant people, saved contacts and organisation directory. Use this before drafting whenever the user gives only a name. Returns several matches — if more than one plausible match comes back, ask the user which person they mean.",
       inputSchema: z.object({ query: z.string() }),
       execute: async ({ query }) => {
         try {
-          const params = new URLSearchParams({
-            $top: "5",
-            $search: `"${query.replace(/"/g, "")}"`,
-          });
-          const data = (await graphJson(userId, `/me/people?${params}`)) as {
-            value?: Array<{
-              displayName?: string;
-              scoredEmailAddresses?: Array<{ address?: string }>;
-              emailAddresses?: Array<{ address?: string }>;
-            }>;
-          };
-          const people = (data.value ?? [])
-            .map((p) => ({
-              name: p.displayName ?? "",
-              email: p.scoredEmailAddresses?.[0]?.address ?? p.emailAddresses?.[0]?.address ?? "",
-            }))
-            .filter((p) => p.email);
-          return { people };
+          const { searchPeople } = await import("@/lib/ms-people.server");
+          const people = await searchPeople(userId, query, 8);
+          return { people, count: people.length };
         } catch (e) {
+          if (e instanceof Response) {
+            return { error: "Microsoft account not connected", people: [] };
+          }
           return { error: e instanceof Error ? e.message : String(e), people: [] };
         }
       },
