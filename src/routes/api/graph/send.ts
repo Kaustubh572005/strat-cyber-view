@@ -32,8 +32,20 @@ export const Route = createFileRoute("/api/graph/send")({
           subject: string;
           body: string;
           contentType?: "Text" | "HTML";
+          attachments?: Array<{ name: string; contentType?: string; contentBytes: string }>;
         };
         if (!body.to?.length) return new Response("to required", { status: 400 });
+        const attachments = (body.attachments ?? []).map((a) => ({
+          "@odata.type": "#microsoft.graph.fileAttachment",
+          name: a.name,
+          contentType: a.contentType || "application/octet-stream",
+          contentBytes: a.contentBytes,
+        }));
+        // Graph rejects sendMail payloads above ~4 MB.
+        const totalBytes = attachments.reduce((n, a) => n + a.contentBytes.length * 0.75, 0);
+        if (totalBytes > 3.5 * 1024 * 1024) {
+          return new Response("Attachments too large (max ~3.5 MB in total)", { status: 413 });
+        }
         const payload = {
           message: {
             subject: body.subject || "(no subject)",
@@ -41,6 +53,7 @@ export const Route = createFileRoute("/api/graph/send")({
             toRecipients: toRecipients(body.to),
             ccRecipients: toRecipients(body.cc ?? []),
             bccRecipients: toRecipients(body.bcc ?? []),
+            ...(attachments.length ? { attachments } : {}),
           },
           saveToSentItems: true,
         };
