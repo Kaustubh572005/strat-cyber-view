@@ -49,6 +49,14 @@ export const Route = createFileRoute("/api/auth/ms/callback")({
               ms_display_name: me.displayName || null,
             })
             .eq("id", userId);
+          // Pull the Outlook address book into Kaalu so contact search works
+          // straight away. Never block the redirect on it.
+          try {
+            const { syncOutlookContacts } = await import("@/lib/ms-people.server");
+            await syncOutlookContacts(userId);
+          } catch (syncErr) {
+            console.error("[ms callback] contact sync failed", syncErr);
+          }
           return htmlRedirect(`/mail?ms_connected=1`);
         } catch (e) {
           console.error("[ms callback]", e);

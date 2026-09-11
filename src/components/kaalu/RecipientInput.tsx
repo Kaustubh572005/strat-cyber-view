@@ -35,12 +35,13 @@ export function RecipientInput({
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 1) {
-      setSuggestions([]);
+    // With an empty box we still show the most recent Outlook contacts,
+    // exactly like Outlook's own recipient picker.
+    if (!open && q.length < 1) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    setLoading(q.length > 0);
     const t = setTimeout(async () => {
       try {
         const { data } = await supabase.auth.getSession();
@@ -63,9 +64,9 @@ export function RecipientInput({
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }, query.trim() ? 250 : 0);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, open]);
 
   function add(r: Recipient, list = stateRef.current.value) {
     if (list.some((x) => x.email.toLowerCase() === r.email.toLowerCase())) return list;
@@ -155,7 +156,7 @@ export function RecipientInput({
       {loading && query.trim() && (
         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       )}
-      {open && query.trim().length > 0 && (suggestions.length > 0 || notConnected) && (
+      {open && (suggestions.length > 0 || notConnected) && (
         <div className="absolute top-full left-0 mt-1 w-full glass-strong rounded-md z-40 shadow-xl border border-border overflow-hidden max-h-72 overflow-y-auto">
           {notConnected && suggestions.length === 0 && (
             <div className="px-3 py-2 text-xs text-muted-foreground">
