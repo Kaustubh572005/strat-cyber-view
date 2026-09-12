@@ -10,7 +10,7 @@ import {
 } from "@/lib/conversations.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import {
   AudioLines,
   Mail,
@@ -232,7 +232,7 @@ export function Sidebar() {
               className="h-8 pl-8 text-sm"
             />
           </div>
-          <ScrollArea className="flex-1 -mx-1">
+          <div className="-mx-1">
             <div className="space-y-0.5 px-1">
               {filtered.map((c) => (
                 <ConvRow
@@ -267,11 +267,11 @@ export function Sidebar() {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       )}
+      </div>
 
-      {!isVoiceActive && <div className="flex-1" />}
 
       <div className="p-3 border-t border-border flex items-center gap-2">
         <Button
