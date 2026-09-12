@@ -55,16 +55,18 @@ function CyberPage() {
 
   const [cveSeverity, setCveSeverity] = useState<string>("ALL");
 
-  // ---- LiveMint (official livemint.com) — an additional source inside News ----
-  const fetchLiveMint = useServerFn(listArticles);
+  // ---- Stored news intelligence: cyber, AI & technology from every source
+  // (LiveMint included, treated exactly like the others — no separate section).
+  const NEWS_SOURCES = ["cyber-news", "ai-news", "livemint"];
+  const fetchNews = useServerFn(listArticles);
   const fetchStatus = useServerFn(listSourceStatus);
   const doRefresh = useServerFn(refreshSource);
   const qc = useQueryClient();
-  const [lmFilter, setLmFilter] = useState<string>("ALL");
+  const [newsFilter, setNewsFilter] = useState<string>("ALL");
 
-  const { data: lmArticles = [], isLoading: lmLoading } = useQuery({
-    queryKey: ["livemint-articles"],
-    queryFn: () => fetchLiveMint({ data: { source_key: "livemint", limit: 60 } }),
+  const { data: newsArticles = [], isLoading: newsLoading } = useQuery({
+    queryKey: ["news-articles"],
+    queryFn: () => fetchNews({ data: { source_keys: NEWS_SOURCES, limit: 120 } }),
     refetchInterval: SIX_HOURS_MS,
     staleTime: 5 * 60 * 1000,
   });
@@ -74,26 +76,34 @@ function CyberPage() {
     queryFn: () => fetchStatus(),
     refetchInterval: SIX_HOURS_MS,
   });
-  const lmStatus = sourceStatus.find((s) => s.source_key === "livemint");
+  const newsStatuses = sourceStatus.filter((s) => NEWS_SOURCES.includes(s.source_key));
+  const lastNewsSync = newsStatuses
+    .map((s) => s.last_synced_at)
+    .filter(Boolean)
+    .sort()
+    .pop() as string | undefined;
 
   const refreshMutation = useMutation({
-    mutationFn: () => doRefresh({ data: { source_key: "livemint" } }),
+    mutationFn: () => doRefresh({ data: { source_key: "all" } }),
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["livemint-articles"] });
+      qc.invalidateQueries({ queryKey: ["news-articles"] });
       qc.invalidateQueries({ queryKey: ["source-status"] });
     },
   });
 
-  const lmCategories = useMemo(
-    () => ["ALL", ...Array.from(new Set(lmArticles.map((a) => a.category).filter(Boolean) as string[]))],
-    [lmArticles],
+  const newsCategories = useMemo(
+    () => [
+      "ALL",
+      ...Array.from(new Set(newsArticles.map((a) => a.category).filter(Boolean) as string[])),
+    ],
+    [newsArticles],
   );
-  const lmFiltered = useMemo(
-    () => (lmFilter === "ALL" ? lmArticles : lmArticles.filter((a) => a.category === lmFilter)),
-    [lmArticles, lmFilter],
+  const newsFiltered = useMemo(
+    () => (newsFilter === "ALL" ? newsArticles : newsArticles.filter((a) => a.category === newsFilter)),
+    [newsArticles, newsFilter],
   );
-  const nextSync = lmStatus?.last_synced_at
-    ? new Date(new Date(lmStatus.last_synced_at).getTime() + SIX_HOURS_MS)
+  const nextSync = lastNewsSync
+    ? new Date(new Date(lastNewsSync).getTime() + SIX_HOURS_MS)
     : null;
 
   const filteredCves = useMemo(
@@ -216,33 +226,22 @@ function CyberPage() {
         </aside>
       </section>
 
-      {/* LiveMint — official livemint.com cyber / technology intelligence */}
+      {/* Cyber, AI & Technology news — every stored source in one feed */}
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
           <div>
-            <h2 className="text-lg font-semibold">LiveMint — Cyber & Technology News</h2>
+            <h2 className="text-lg font-semibold">Cybersecurity, AI & Technology News</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Official source:{" "}
-              <a
-                href="https://www.livemint.com/"
-                target="_blank"
-                rel="noreferrer"
-                className="text-primary hover:underline"
-              >
-                livemint.com
-              </a>{" "}
-              · stored permanently, only new articles are summarised by AI.
+              Aggregated from all trusted publishers · stored permanently, only new articles are
+              summarised by AI.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-[11px] text-muted-foreground text-right leading-tight">
               <div>
-                Last sync:{" "}
-                {lmStatus?.last_synced_at
-                  ? new Date(lmStatus.last_synced_at).toLocaleString()
-                  : "not yet"}
-                {lmStatus?.last_status === "error" && (
-                  <span className="ml-1 text-red-500">(failed — showing stored articles)</span>
+                Last sync: {lastNewsSync ? new Date(lastNewsSync).toLocaleString() : "not yet"}
+                {newsStatuses.some((s) => s.last_status === "error") && (
+                  <span className="ml-1 text-red-500">(a source failed — showing stored news)</span>
                 )}
               </div>
               <div>Next scheduled sync: {nextSync ? nextSync.toLocaleString() : "within 6 hours"}</div>
@@ -261,13 +260,13 @@ function CyberPage() {
           </div>
         </div>
 
-        {lmCategories.length > 1 && (
+        {newsCategories.length > 1 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {lmCategories.map((c) => (
+            {newsCategories.map((c) => (
               <button
                 key={c}
-                onClick={() => setLmFilter(c)}
-                className={`text-[11px] px-2 py-1 rounded border ${lmFilter === c ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+                onClick={() => setNewsFilter(c)}
+                className={`text-[11px] px-2 py-1 rounded border ${newsFilter === c ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
               >
                 {c}
               </button>
@@ -275,20 +274,20 @@ function CyberPage() {
           </div>
         )}
 
-        {lmLoading && <div className="text-sm text-muted-foreground">Loading LiveMint articles…</div>}
-        {!lmLoading && lmFiltered.length === 0 && (
+        {newsLoading && <div className="text-sm text-muted-foreground">Loading news…</div>}
+        {!newsLoading && newsFiltered.length === 0 && (
           <div className="text-sm text-muted-foreground">
-            No LiveMint articles stored yet — use Refresh Now to pull the latest.
+            No articles stored yet — use Refresh Now to pull the latest.
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {lmFiltered.slice(0, 24).map((a) => (
+          {newsFiltered.slice(0, 30).map((a) => (
             <article
               key={a.id}
               className="glass rounded-xl p-4 border border-border hover:border-primary/40 transition flex flex-col"
             >
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
-                <span className="text-primary">LiveMint</span>
+                <span className="text-primary">{a.publisher || a.source_key}</span>
                 {a.category && <span>· {a.category}</span>}
                 {a.severity && (
                   <span className={`ml-auto px-1.5 rounded border ${sevColor[a.severity] ?? ""}`}>

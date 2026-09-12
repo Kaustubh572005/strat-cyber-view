@@ -194,7 +194,7 @@ export function VoiceAgent({ conversationId }: { conversationId: string | null }
   const empty = messages.length === 0;
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full min-h-0 flex flex-col">
       {/* Chat area */}
       <div className="flex-1 min-h-0 flex flex-col relative overflow-hidden">
         {empty ? (
@@ -318,7 +318,7 @@ function MessageList({
     el.scrollTop = el.scrollHeight;
   }, [messages]);
   return (
-    <div ref={scrollerRef} className="overflow-y-auto px-4 md:px-8 py-8">
+    <div ref={scrollerRef} className="min-h-0 overflow-y-auto px-4 md:px-8 py-8">
       <div className="max-w-3xl mx-auto space-y-6">
         {messages.map((m) => {
           const text = m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");

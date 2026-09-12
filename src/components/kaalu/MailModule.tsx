@@ -120,7 +120,7 @@ export function MailModule() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full min-h-0 flex flex-col">
       <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
         <Button
           size="sm"
@@ -424,7 +424,7 @@ function ConnectMailPrompt() {
     window.location.href = `/api/auth/ms/start?t=${encodeURIComponent(token)}`;
   }
   return (
-    <div className="h-screen flex items-center justify-center px-6">
+    <div className="h-full min-h-[70vh] flex items-center justify-center px-6">
       <div className="glass-strong rounded-2xl p-8 max-w-md text-center neon-ring">
         <MailIcon className="h-10 w-10 text-primary mx-auto mb-3" />
         <h2 className="text-xl font-semibold">Connect your Microsoft account</h2>

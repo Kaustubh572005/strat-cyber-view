@@ -10,7 +10,7 @@ import {
 } from "@/lib/conversations.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import {
   AudioLines,
   Mail,
@@ -100,7 +100,7 @@ export function Sidebar() {
     (location.pathname.match(/^\/voice\/([^/]+)/) || [])[1] || null;
 
   return (
-    <aside className="hidden md:flex w-64 shrink-0 h-screen sticky top-0 bg-sidebar border-r border-sidebar-border flex-col">
+    <aside className="hidden md:flex w-64 shrink-0 h-full min-h-0 bg-sidebar border-r border-sidebar-border flex-col">
       <div className="px-4 py-3.5 border-b border-sidebar-border">
         <UtiLogo className="h-7" />
         <div className="mt-2.5">
@@ -113,7 +113,10 @@ export function Sidebar() {
 
 
 
-      <nav className="px-3 py-3 space-y-1 overflow-y-auto">
+      {/* Navigation + history share one scroller so nothing is ever clipped
+          behind the Settings row on short screens. */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+      <nav className="px-3 py-3 space-y-1 shrink-0">
         <NavItem
           active={isDashboard}
           onClick={() => navigate({ to: "/dashboard" })}
@@ -189,7 +192,7 @@ export function Sidebar() {
       </nav>
 
       {isVoiceActive && (
-        <div className="mt-4 flex-1 min-h-0 flex flex-col px-3">
+        <div className="mt-4 pb-3 flex-1 min-h-0 flex flex-col px-3">
           <div className="flex items-center gap-2 mb-2">
             <Button
               size="sm"
@@ -229,7 +232,7 @@ export function Sidebar() {
               className="h-8 pl-8 text-sm"
             />
           </div>
-          <ScrollArea className="flex-1 -mx-1">
+          <div className="-mx-1">
             <div className="space-y-0.5 px-1">
               {filtered.map((c) => (
                 <ConvRow
@@ -264,11 +267,11 @@ export function Sidebar() {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       )}
+      </div>
 
-      {!isVoiceActive && <div className="flex-1" />}
 
       <div className="p-3 border-t border-border flex items-center gap-2">
         <Button
