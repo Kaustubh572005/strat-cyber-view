@@ -235,5 +235,195 @@ export function buildMailTools(userId: string) {
         }
       },
     }),
+
+    sync_contacts: tool({
+      description:
+        "Refresh Kaalu's copy of the user's Outlook address book (saved contacts and frequent correspondents). Use when a person cannot be found but the user insists the contact exists in Outlook.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        try {
+          const { syncOutlookContacts } = await import("@/lib/ms-people.server");
+          return { ok: true, ...(await syncOutlookContacts(userId)) };
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+    }),
+
+    list_sent_mail: tool({
+      description:
+        "List the user's recently sent messages (subject, recipients, when). Use this to find mails that may need a follow-up or chase-up.",
+      inputSchema: z.object({ limit: z.number().nullable(), search: z.string().nullable() }),
+      execute: async ({ limit, search }) => {
+        try {
+          const top = Math.min(Math.max(limit ?? 10, 1), 25);
+          const params = new URLSearchParams({
+            $top: String(top),
+            $select: "id,subject,toRecipients,bodyPreview,sentDateTime,conversationId",
+          });
+          if (search) params.set("$search", `"${search.replace(/"/g, "")}"`);
+          else params.set("$orderby", "sentDateTime desc");
+          const data = (await graphJson(
+            userId,
+            `/me/mailFolders/sentitems/messages?${params}`,
+            search ? { headers: { ConsistencyLevel: "eventual" } } : undefined,
+          )) as {
+            value?: Array<{
+              id?: string;
+              subject?: string;
+              bodyPreview?: string;
+              sentDateTime?: string;
+              conversationId?: string;
+              toRecipients?: Array<{ emailAddress?: { address?: string; name?: string } }>;
+            }>;
+          };
+          return {
+            messages: (data.value ?? []).map((m) => ({
+              id: m.id,
+              subject: m.subject,
+              preview: m.bodyPreview,
+              sentAt: m.sentDateTime,
+              conversationId: m.conversationId,
+              to: (m.toRecipients ?? []).map((r) => r.emailAddress?.address).filter(Boolean),
+            })),
+          };
+        } catch (e) {
+          return { error: e instanceof Error ? e.message : String(e), messages: [] };
+        }
+      },
+    }),
+
+    create_followup_draft: tool({
+      description:
+        "Create a polite follow-up / chase-up draft on an existing sent or received message, keeping the same email thread and subject. Write the follow-up body yourself. Does not send.",
+      inputSchema: z.object({
+        messageId: z.string().describe("Id of the original message (from list_sent_mail or list_recent_mail)."),
+        body: z.string(),
+        replyAll: z.boolean().nullable(),
+      }),
+      execute: async ({ messageId, body, replyAll }) => {
+        try {
+          const path = replyAll ? "createReplyAll" : "createReply";
+          const created = (await graphJson(
+            userId,
+            `/me/messages/${encodeURIComponent(messageId)}/${path}`,
+            { method: "POST", body: JSON.stringify({}) },
+          )) as { id?: string; webLink?: string; subject?: string };
+          if (created.id) {
+            await graphJson(userId, `/me/messages/${encodeURIComponent(created.id)}`, {
+              method: "PATCH",
+              body: JSON.stringify({ body: { contentType: "Text", content: body } }),
+            });
+          }
+          return { ok: true, draftId: created.id, webLink: created.webLink };
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+    }),
+
+    forward_mail: tool({
+      description:
+        "Create a forward draft of an existing message to new recipients, keeping the original attachments. Write the covering comment yourself. Does not send.",
+      inputSchema: z.object({
+        messageId: z.string(),
+        to: z.array(RecipientSchema),
+        comment: z.string().nullable(),
+      }),
+      execute: async ({ messageId, to, comment }) => {
+        try {
+          const created = (await graphJson(
+            userId,
+            `/me/messages/${encodeURIComponent(messageId)}/createForward`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                toRecipients: toRecipients(to),
+                comment: comment ?? "",
+              }),
+            },
+          )) as { id?: string; webLink?: string };
+          return { ok: true, draftId: created.id, webLink: created.webLink };
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+    }),
+
+    flag_for_followup: tool({
+      description:
+        "Flag a message in Outlook for follow-up, optionally with a due date, so it appears in the user's Outlook follow-up list.",
+      inputSchema: z.object({
+        messageId: z.string(),
+        dueDateIso: z.string().nullable().describe("ISO date/time for the reminder, or null."),
+        timeZone: z.string().nullable().describe("IANA time zone, e.g. Asia/Kolkata."),
+      }),
+      execute: async ({ messageId, dueDateIso, timeZone }) => {
+        try {
+          const tz = timeZone || "Asia/Kolkata";
+          const flag: Record<string, unknown> = { flagStatus: "flagged" };
+          if (dueDateIso) {
+            flag.dueDateTime = { dateTime: dueDateIso, timeZone: tz };
+            flag.startDateTime = { dateTime: new Date().toISOString(), timeZone: tz };
+          }
+          await graphJson(userId, `/me/messages/${encodeURIComponent(messageId)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ flag }),
+          });
+          return { ok: true, messageId, dueDate: dueDateIso };
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+    }),
+
+    list_attachments: tool({
+      description: "List the attachments on a message (name, type, size) so they can be referenced or forwarded.",
+      inputSchema: z.object({ messageId: z.string() }),
+      execute: async ({ messageId }) => {
+        try {
+          const data = (await graphJson(
+            userId,
+            `/me/messages/${encodeURIComponent(messageId)}/attachments?$select=id,name,contentType,size`,
+          )) as { value?: Array<{ id?: string; name?: string; contentType?: string; size?: number }> };
+          return { attachments: data.value ?? [] };
+        } catch (e) {
+          return { error: e instanceof Error ? e.message : String(e), attachments: [] };
+        }
+      },
+    }),
+
+    attach_to_draft: tool({
+      description:
+        "Copy an attachment from an existing message onto a draft, so the draft goes out with that file attached. Use list_attachments first to get the attachment id.",
+      inputSchema: z.object({
+        draftId: z.string(),
+        sourceMessageId: z.string(),
+        attachmentId: z.string(),
+      }),
+      execute: async ({ draftId, sourceMessageId, attachmentId }) => {
+        try {
+          const att = (await graphJson(
+            userId,
+            `/me/messages/${encodeURIComponent(sourceMessageId)}/attachments/${encodeURIComponent(attachmentId)}`,
+          )) as { name?: string; contentType?: string; contentBytes?: string };
+          if (!att.contentBytes) {
+            return { ok: false, error: "That attachment cannot be copied (it is not a file attachment)." };
+          }
+          await graphJson(userId, `/me/messages/${encodeURIComponent(draftId)}/attachments`, {
+            method: "POST",
+            body: JSON.stringify({
+              "@odata.type": "#microsoft.graph.fileAttachment",
+              name: att.name ?? "attachment",
+              contentType: att.contentType ?? "application/octet-stream",
+              contentBytes: att.contentBytes,
+            }),
+          });
+          return { ok: true, draftId, name: att.name };
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+    }),
   };
 }
