@@ -55,16 +55,18 @@ function CyberPage() {
 
   const [cveSeverity, setCveSeverity] = useState<string>("ALL");
 
-  // ---- LiveMint (official livemint.com) — an additional source inside News ----
-  const fetchLiveMint = useServerFn(listArticles);
+  // ---- Stored news intelligence: cyber, AI & technology from every source
+  // (LiveMint included, treated exactly like the others — no separate section).
+  const NEWS_SOURCES = ["cyber-news", "ai-news", "livemint"];
+  const fetchNews = useServerFn(listArticles);
   const fetchStatus = useServerFn(listSourceStatus);
   const doRefresh = useServerFn(refreshSource);
   const qc = useQueryClient();
-  const [lmFilter, setLmFilter] = useState<string>("ALL");
+  const [newsFilter, setNewsFilter] = useState<string>("ALL");
 
-  const { data: lmArticles = [], isLoading: lmLoading } = useQuery({
-    queryKey: ["livemint-articles"],
-    queryFn: () => fetchLiveMint({ data: { source_key: "livemint", limit: 60 } }),
+  const { data: newsArticles = [], isLoading: newsLoading } = useQuery({
+    queryKey: ["news-articles"],
+    queryFn: () => fetchNews({ data: { source_keys: NEWS_SOURCES, limit: 120 } }),
     refetchInterval: SIX_HOURS_MS,
     staleTime: 5 * 60 * 1000,
   });
@@ -74,26 +76,34 @@ function CyberPage() {
     queryFn: () => fetchStatus(),
     refetchInterval: SIX_HOURS_MS,
   });
-  const lmStatus = sourceStatus.find((s) => s.source_key === "livemint");
+  const newsStatuses = sourceStatus.filter((s) => NEWS_SOURCES.includes(s.source_key));
+  const lastNewsSync = newsStatuses
+    .map((s) => s.last_synced_at)
+    .filter(Boolean)
+    .sort()
+    .pop() as string | undefined;
 
   const refreshMutation = useMutation({
-    mutationFn: () => doRefresh({ data: { source_key: "livemint" } }),
+    mutationFn: () => doRefresh({ data: { source_key: "all" } }),
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["livemint-articles"] });
+      qc.invalidateQueries({ queryKey: ["news-articles"] });
       qc.invalidateQueries({ queryKey: ["source-status"] });
     },
   });
 
-  const lmCategories = useMemo(
-    () => ["ALL", ...Array.from(new Set(lmArticles.map((a) => a.category).filter(Boolean) as string[]))],
-    [lmArticles],
+  const newsCategories = useMemo(
+    () => [
+      "ALL",
+      ...Array.from(new Set(newsArticles.map((a) => a.category).filter(Boolean) as string[])),
+    ],
+    [newsArticles],
   );
-  const lmFiltered = useMemo(
-    () => (lmFilter === "ALL" ? lmArticles : lmArticles.filter((a) => a.category === lmFilter)),
-    [lmArticles, lmFilter],
+  const newsFiltered = useMemo(
+    () => (newsFilter === "ALL" ? newsArticles : newsArticles.filter((a) => a.category === newsFilter)),
+    [newsArticles, newsFilter],
   );
-  const nextSync = lmStatus?.last_synced_at
-    ? new Date(new Date(lmStatus.last_synced_at).getTime() + SIX_HOURS_MS)
+  const nextSync = lastNewsSync
+    ? new Date(new Date(lastNewsSync).getTime() + SIX_HOURS_MS)
     : null;
 
   const filteredCves = useMemo(
