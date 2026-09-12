@@ -9,7 +9,7 @@ import { emailAssist } from "@/lib/ai-assist.functions";
 import { saveDraft } from "@/lib/drafts.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Save, Sparkles, Wand2, Loader2 } from "lucide-react";
+import { Send, Save, Sparkles, Wand2, Loader2, Paperclip, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+type Attachment = { name: string; contentType: string; size: number; contentBytes: string };
+
+/** Reads a file into base64 (without the data-URL prefix) for Microsoft Graph. */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read file"));
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      resolve(result.slice(result.indexOf(",") + 1));
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export type ComposeInitial = {
   id?: string;
@@ -51,6 +66,8 @@ export function ComposeDialog({
   const [confirmSend, setConfirmSend] = useState(false);
   const [sending, setSending] = useState(false);
   const [draftId, setDraftId] = useState<string | undefined>(initial?.id);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
   const assist = useServerFn(emailAssist);
   const save = useServerFn(saveDraft);
   const commitTo = useRef<(() => Recipient[]) | null>(null);
@@ -65,6 +82,7 @@ export function ComposeDialog({
       setSubject(initial?.subject ?? "");
       setBody(initial?.body ?? "");
       setDraftId(initial?.id);
+      setAttachments([]);
       setConfirmSend(false);
     }
   }, [open, initial]);
@@ -130,6 +148,11 @@ export function ComposeDialog({
           subject,
           body,
           contentType: "Text",
+          attachments: attachments.map((a) => ({
+            name: a.name,
+            contentType: a.contentType,
+            contentBytes: a.contentBytes,
+          })),
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -198,8 +221,64 @@ export function ComposeDialog({
             placeholder="Write your message…"
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            className="min-h-[280px] bg-muted/50 border-border resize-none"
+            className="min-h-[240px] bg-muted/50 border-border resize-none"
           />
+
+          {/* Attachments */}
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={async (e) => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = "";
+                for (const f of files) {
+                  if (f.size > 3.5 * 1024 * 1024) {
+                    toast.error(`${f.name} is larger than 3.5 MB`);
+                    continue;
+                  }
+                  const contentBytes = await fileToBase64(f);
+                  setAttachments((prev) => [
+                    ...prev,
+                    {
+                      name: f.name,
+                      contentType: f.type || "application/octet-stream",
+                      size: f.size,
+                      contentBytes,
+                    },
+                  ]);
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={() => fileRef.current?.click()}
+            >
+              <Paperclip className="h-4 w-4" /> Attach files
+            </Button>
+            {attachments.map((a, i) => (
+              <span
+                key={a.name + i}
+                className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
+                title={`${a.name} · ${Math.round(a.size / 1024)} KB`}
+              >
+                <Paperclip className="h-3 w-3" />
+                <span className="max-w-[160px] truncate">{a.name}</span>
+                <button
+                  type="button"
+                  className="hover:text-destructive"
+                  onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-2 mt-3">
