@@ -100,7 +100,7 @@ export function Sidebar() {
     (location.pathname.match(/^\/voice\/([^/]+)/) || [])[1] || null;
 
   return (
-    <aside className="hidden md:flex w-64 shrink-0 h-screen sticky top-0 bg-sidebar border-r border-sidebar-border flex-col">
+    <aside className="hidden md:flex w-64 shrink-0 h-full min-h-0 bg-sidebar border-r border-sidebar-border flex-col">
       <div className="px-4 py-3.5 border-b border-sidebar-border">
         <UtiLogo className="h-7" />
         <div className="mt-2.5">
@@ -113,7 +113,10 @@ export function Sidebar() {
 
 
 
-      <nav className="px-3 py-3 space-y-1 overflow-y-auto">
+      {/* Navigation + history share one scroller so nothing is ever clipped
+          behind the Settings row on short screens. */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+      <nav className="px-3 py-3 space-y-1 shrink-0">
         <NavItem
           active={isDashboard}
           onClick={() => navigate({ to: "/dashboard" })}
