@@ -33,14 +33,16 @@ function AuthedShell() {
   });
 
   return (
-    <div className="relative min-h-screen w-full text-foreground">
+    <div className="relative h-screen w-full overflow-hidden text-foreground">
       <StarField />
       <SplashScreen />
-      <div className="relative z-10 flex min-h-screen">
+      <div className="relative z-10 flex h-screen min-h-0">
         <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 min-h-0 flex-1 flex-col">
           <TopHeader />
-          <main className="flex-1 min-w-0">
+          {/* The app shell owns the only vertical scroller so long pages can
+              never push the footer or sidebar controls off-screen. */}
+          <main className="flex-1 min-w-0 min-h-0 overflow-y-auto">
             <Outlet />
           </main>
           <AppFooter lastSync={lastSync ?? null} />
