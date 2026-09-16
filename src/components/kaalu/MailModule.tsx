@@ -22,6 +22,7 @@ import {
   Wand2,
   Loader2,
   Mail as MailIcon,
+  Users,
 } from "lucide-react";
 import { ComposeDialog, type ComposeInitial } from "@/components/kaalu/ComposeDialog";
 import { toast } from "sonner";
@@ -149,6 +150,7 @@ export function MailModule() {
         >
           <RefreshCw className={`h-4 w-4 ${listQ.isFetching ? "animate-spin" : ""}`} />
         </Button>
+        <SyncContactsButton />
         <div className="ml-auto text-xs text-muted-foreground">
           {msStatus.ms_email}{" "}
           <button
@@ -413,6 +415,39 @@ function SummarizeInboxButton() {
         </div>
       )}
     </div>
+  );
+}
+
+function SyncContactsButton() {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="gap-2"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          const { data } = await supabase.auth.getSession();
+          const res = await fetch("/api/graph/contacts", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${data.session?.access_token ?? ""}` },
+          });
+          const j = (await res.json()) as { ok?: boolean; synced?: number; error?: string };
+          if (j.ok) toast.success(`${j.synced ?? 0} contacts synced from Outlook`);
+          else toast.error(j.error === "not_connected" ? "Connect Outlook first" : "Contact sync failed");
+        } catch {
+          toast.error("Contact sync failed");
+        } finally {
+          setBusy(false);
+        }
+      }}
+      title="Sync Outlook contacts into Kaalu"
+    >
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
+      Sync contacts
+    </Button>
   );
 }
 
