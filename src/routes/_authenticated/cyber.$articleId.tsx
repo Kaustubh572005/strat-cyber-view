@@ -87,7 +87,7 @@ function ArticleDetail() {
             <div className="glass rounded-xl p-4 border border-border">
               <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Recommended Mitigation</h3>
               <ul className="text-sm list-disc pl-4 space-y-1">
-                {data.detail.mitigation.map((m, i) => <li key={i}>{m}</li>)}
+                {(data.detail.mitigation as string[]).map((m: string, i: number) => <li key={i}>{m}</li>)}
               </ul>
             </div>
           </section>
