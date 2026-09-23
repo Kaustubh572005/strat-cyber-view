@@ -178,6 +178,7 @@ export const getCyberFeed = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const getCyberArticle = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
   .handler(async ({ data }) => {
     const results = await Promise.all(CYBER_SOURCES.map(fetchFeed));
