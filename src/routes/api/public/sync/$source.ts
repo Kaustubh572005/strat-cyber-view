@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { runSync, type SourceKey } from "@/lib/sync-runner.server";
+import { isAuthorizedSyncCaller, syncUnauthorized } from "@/lib/sync-auth.server";
 
 const VALID: SourceKey[] = [
   "sebi-whats-new",
@@ -12,7 +13,8 @@ const VALID: SourceKey[] = [
   "livemint",
 ];
 
-async function handle(source: string) {
+async function handle(source: string, request: Request) {
+  if (!isAuthorizedSyncCaller(request)) return syncUnauthorized();
   if (!VALID.includes(source as SourceKey)) {
     return new Response(JSON.stringify({ error: "unknown source" }), {
       status: 404,
@@ -33,8 +35,8 @@ async function handle(source: string) {
 export const Route = createFileRoute("/api/public/sync/$source")({
   server: {
     handlers: {
-      GET: async ({ params }) => handle(params.source),
-      POST: async ({ params }) => handle(params.source),
+      GET: async ({ params, request }) => handle(params.source, request),
+      POST: async ({ params, request }) => handle(params.source, request),
     },
   },
 });

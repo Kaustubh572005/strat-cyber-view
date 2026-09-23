@@ -1,14 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getRequestUserId, unauthorized } from "@/lib/require-user.server";
 
 export const Route = createFileRoute("/api/voice/stt")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const userId = await getRequestUserId(request);
+        if (!userId) return unauthorized();
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
         const form = await request.formData();
         const file = form.get("file");
         if (!(file instanceof File)) return new Response("file required", { status: 400 });
+        if (file.size > 20 * 1024 * 1024) return new Response("file too large", { status: 413 });
         const upstream = new FormData();
         upstream.append("file", file, file.name || "recording.webm");
         upstream.append("model", "openai/gpt-4o-mini-transcribe");
