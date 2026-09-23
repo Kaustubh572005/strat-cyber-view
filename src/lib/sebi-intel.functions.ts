@@ -1,7 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 export type PublicIssueRow = {
@@ -39,21 +37,6 @@ export type RepoSyncRow = {
   last_added_count: number;
 };
 
-function publicClient() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
-}
-
 const listInput = z.object({
   doc_type: z.string().optional(),
   category: z.string().optional(),
@@ -65,9 +48,10 @@ const listInput = z.object({
 });
 
 export const listPublicIssues = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => listInput.parse(d ?? {}))
-  .handler(async ({ data }) => {
-    const supa = publicClient();
+  .handler(async ({ data, context }) => {
+    const supa = context.supabase;
     let q = supa
       .from("sebi_public_issues")
       .select(
@@ -89,9 +73,10 @@ export const listPublicIssues = createServerFn({ method: "GET" })
   });
 
 export const listOrders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => listInput.parse(d ?? {}))
-  .handler(async ({ data }) => {
-    const supa = publicClient();
+  .handler(async ({ data, context }) => {
+    const supa = context.supabase;
     let q = supa
       .from("sebi_orders")
       .select(
@@ -112,8 +97,10 @@ export const listOrders = createServerFn({ method: "GET" })
     return (rows ?? []) as OrderRow[];
   });
 
-export const listSebiRepoStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const supa = publicClient();
+export const listSebiRepoStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+  const supa = context.supabase;
   const { data, error } = await supa
     .from("sebi_repo_sync")
     .select("repo_key, display_name, last_synced_at, last_status, last_error, last_added_count")
@@ -136,6 +123,7 @@ export type GlobalHit = {
 };
 
 export const searchSebiAll = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -146,8 +134,8 @@ export const searchSebiAll = createServerFn({ method: "GET" })
       })
       .parse(d ?? {}),
   )
-  .handler(async ({ data }) => {
-    const supa = publicClient();
+  .handler(async ({ data, context }) => {
+    const supa = context.supabase;
     const like = `%${data.q}%`;
     const hits: GlobalHit[] = [];
 
@@ -244,7 +232,7 @@ export const refreshSebiIntel = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { runSebiIntelSync } = await import("@/lib/sebi-intel.server");
     const repos = data.repo === "all" ? (["public-issues", "orders"] as const) : [data.repo];
     const results: Array<{ repo: string; added: number; total: number; error?: string }> = [];

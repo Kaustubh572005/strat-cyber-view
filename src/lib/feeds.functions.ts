@@ -1,7 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 export type FeedArticle = {
@@ -45,23 +43,10 @@ export type SourceStatus = {
   last_added_count: number;
 };
 
-function publicClient() {
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-  return createClient<Database>(process.env.SUPABASE_URL!, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
-}
-
-export const listSourceStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const supa = publicClient();
+export const listSourceStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+  const supa = context.supabase;
   const { data, error } = await supa
     .from("feed_sources")
     .select("source_key, display_name, category, last_synced_at, last_status, last_error, last_added_count")
@@ -71,6 +56,7 @@ export const listSourceStatus = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const listArticles = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -80,8 +66,8 @@ export const listArticles = createServerFn({ method: "GET" })
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
-    const supa = publicClient();
+  .handler(async ({ data, context }) => {
+    const supa = context.supabase;
     let q = supa
       .from("feed_articles")
       .select(
@@ -98,9 +84,10 @@ export const listArticles = createServerFn({ method: "GET" })
   });
 
 export const getArticleById = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string() }).parse(d))
-  .handler(async ({ data }) => {
-    const supa = publicClient();
+  .handler(async ({ data, context }) => {
+    const supa = context.supabase;
     const { data: row, error } = await supa
       .from("feed_articles")
       .select("*")
@@ -111,6 +98,7 @@ export const getArticleById = createServerFn({ method: "GET" })
   });
 
 export const listNseDisclosures = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -122,8 +110,8 @@ export const listNseDisclosures = createServerFn({ method: "GET" })
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
-    const supa = publicClient();
+  .handler(async ({ data, context }) => {
+    const supa = context.supabase;
     let q = supa
       .from("nse_disclosures")
       .select("*")
@@ -175,7 +163,7 @@ export const refreshSource = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { runSync } = await import("@/lib/sync-runner.server");
     const sources =
       data.source_key === "all"
