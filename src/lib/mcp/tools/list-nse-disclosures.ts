@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { ilikeOrExpression } from "@/lib/pg-filter";
 
 function sb(ctx: ToolContext) {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
@@ -25,7 +26,7 @@ export default defineTool({
       .select("*")
       .order("broadcast_at", { ascending: false, nullsFirst: false })
       .limit(limit ?? 20);
-    if (query) q = q.or(`company_name.ilike.%${query}%,subject.ilike.%${query}%,details.ilike.%${query}%`);
+    if (query) q = q.or(ilikeOrExpression(["company_name", "subject", "details"], query));
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {

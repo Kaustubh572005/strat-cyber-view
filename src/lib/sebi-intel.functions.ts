@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { ilikeOrExpression, ilikePattern } from "@/lib/pg-filter";
 
 export type PublicIssueRow = {
   id: string;
@@ -61,7 +62,7 @@ export const listPublicIssues = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(data.limit);
     if (data.doc_type) q = q.eq("doc_type", data.doc_type);
-    if (data.search) q = q.or(`title.ilike.%${data.search}%,company_name.ilike.%${data.search}%`);
+    if (data.search) q = q.or(ilikeOrExpression(["title", "company_name"], data.search));
     if (data.year) {
       q = q.gte("filing_date", `${data.year}-01-01`).lt("filing_date", `${data.year + 1}-01-01`);
     }
@@ -86,7 +87,7 @@ export const listOrders = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(data.limit);
     if (data.category) q = q.eq("category", data.category);
-    if (data.search) q = q.or(`title.ilike.%${data.search}%,entity_name.ilike.%${data.search}%`);
+    if (data.search) q = q.or(ilikeOrExpression(["title", "entity_name"], data.search));
     if (data.year) {
       q = q.gte("order_date", `${data.year}-01-01`).lt("order_date", `${data.year + 1}-01-01`);
     }
@@ -136,7 +137,7 @@ export const searchSebiAll = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }) => {
     const supa = context.supabase;
-    const like = `%${data.q}%`;
+    const like = ilikePattern(data.q);
     const hits: GlobalHit[] = [];
 
     if (data.repo === "all" || data.repo === "legal") {
@@ -170,7 +171,7 @@ export const searchSebiAll = createServerFn({ method: "GET" })
       let q = supa
         .from("sebi_public_issues")
         .select("id, doc_type, title, url, pdf_url, filing_date, ai_summary, company_name")
-        .or(`title.ilike.${like},company_name.ilike.${like}`)
+        .or(ilikeOrExpression(["title", "company_name"], data.q))
         .order("filing_date", { ascending: false, nullsFirst: false })
         .limit(data.limit);
       if (data.year) {
@@ -196,7 +197,7 @@ export const searchSebiAll = createServerFn({ method: "GET" })
       let q = supa
         .from("sebi_orders")
         .select("id, category, title, url, pdf_url, order_date, ai_summary, entity_name")
-        .or(`title.ilike.${like},entity_name.ilike.${like}`)
+        .or(ilikeOrExpression(["title", "entity_name"], data.q))
         .order("order_date", { ascending: false, nullsFirst: false })
         .limit(data.limit);
       if (data.year) {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type VoiceCaptureState = "idle" | "recording" | "transcribing";
 
@@ -94,7 +95,14 @@ export function useVoiceCapture(
         const form = new FormData();
         form.append("file", blob, `recording.${ext}`);
         try {
-          const res = await fetch("/api/voice/stt", { method: "POST", body: form });
+          const { data: sessionData } = await supabase.auth.getSession();
+          const accessToken = sessionData.session?.access_token;
+          if (!accessToken) throw new Error("Not signed in");
+          const res = await fetch("/api/voice/stt", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${accessToken}` },
+            body: form,
+          });
           if (!res.ok) throw new Error(await res.text());
           const json = (await res.json()) as { text?: string };
           if (json.text?.trim()) onTranscript(json.text.trim());

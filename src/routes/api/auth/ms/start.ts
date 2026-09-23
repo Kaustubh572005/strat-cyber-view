@@ -23,9 +23,9 @@ export const Route = createFileRoute("/api/auth/ms/start")({
         });
         const { data, error } = await sb.auth.getUser();
         if (error || !data.user) return new Response("Unauthorized", { status: 401 });
-        // Encode state = userId + nonce
-        const nonce = crypto.randomUUID();
-        const state = btoa(JSON.stringify({ u: data.user.id, n: nonce }));
+        // Signed state so the callback can trust the user it names.
+        const { createMsState } = await import("@/lib/oauth-state.server");
+        const state = createMsState(data.user.id);
         throw redirect({ href: msAuthorizeUrl(redirectUri(request), state) });
       },
     },

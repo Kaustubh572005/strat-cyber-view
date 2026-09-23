@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { generateText } from "ai";
 import { XMLParser } from "fast-xml-parser";
@@ -178,6 +179,7 @@ export const getCyberFeed = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const getCyberArticle = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
   .handler(async ({ data }) => {
     const results = await Promise.all(CYBER_SOURCES.map(fetchFeed));

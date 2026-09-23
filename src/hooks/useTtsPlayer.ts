@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useTtsPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -23,9 +24,15 @@ export function useTtsPlayer() {
     async (text: string, voice: string = "nova") => {
       if (!text.trim()) return;
       stop();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) return;
       const res = await fetch("/api/voice/tts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ text, voice }),
       });
       if (!res.ok) {

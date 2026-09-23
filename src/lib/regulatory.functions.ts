@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
 
@@ -222,6 +223,7 @@ export const getMarketsIntel = createServerFn({ method: "GET" }).handler(async (
 
 
 export const summarizeRegItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z.object({ title: z.string(), snippet: z.string(), source: z.string() }).parse(d),
   )

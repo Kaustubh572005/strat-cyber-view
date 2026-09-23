@@ -12,13 +12,9 @@ export const Route = createFileRoute("/api/auth/ms/callback")({
         const errDesc = url.searchParams.get("error_description");
         if (err) return htmlRedirect(`/settings?ms_error=${encodeURIComponent(errDesc || err)}`);
         if (!code || !state) return htmlRedirect(`/settings?ms_error=missing_code`);
-        let userId: string;
-        try {
-          const decoded = JSON.parse(atob(state)) as { u: string };
-          userId = decoded.u;
-        } catch {
-          return htmlRedirect(`/settings?ms_error=bad_state`);
-        }
+        const { verifyMsState } = await import("@/lib/oauth-state.server");
+        const userId = verifyMsState(state);
+        if (!userId) return htmlRedirect(`/settings?ms_error=bad_state`);
         const redirectUri = `${url.origin}/api/auth/ms/callback`;
         try {
           const tokens = await msExchangeCode(code, redirectUri);
